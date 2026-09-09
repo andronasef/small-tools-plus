@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>عجلة المشاعر</title>
+<meta name="description" content="عجلة مشاعر تفاعلية بالعربي — لفّها بإيدك واختار الكلمة اللي بتوصف اللي جواك بالظبط.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400;600&family=IBM+Plex+Sans+Arabic:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F1F6;
+  --ink:#211E33;
+  --ink-soft:#5A5570;
+  --line:#D8D4E2;
+  --card:#FFFFFF;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;
+  font-weight:300;
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:640px;margin:0 auto;padding:32px 20px 56px}
+header{margin-bottom:22px}
+h1{
+  font-family:"Reem Kufi",serif;
+  font-weight:600;
+  font-size:clamp(30px,9vw,46px);
+  line-height:1.15;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+}
+.sub{margin:0;color:var(--ink-soft);font-size:15px;max-width:44ch}
+.readout{
+  display:flex;align-items:center;gap:12px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px 16px;
+  margin:0 0 14px;
+}
+.dot{width:16px;height:16px;border-radius:50%;background:#D8D4E2;flex:none;transition:background .2s}
+.readout .fam{font-size:13px;color:var(--ink-soft);margin:0}
+.readout .pick{font-family:"Reem Kufi",serif;font-size:24px;font-weight:600;margin:0;line-height:1.35}
+#wrap{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+#wrap.grabbing{cursor:grabbing}
+#wrap svg{display:block;width:100%;height:auto}
+#wrap svg:focus-visible{outline:2px solid var(--ink);outline-offset:4px;border-radius:50%}
+.controls{display:flex;gap:10px;margin-top:16px}
+button{
+  flex:1;
+  font-family:inherit;font-size:15px;font-weight:400;
+  color:var(--ink);background:transparent;
+  border:1px solid var(--line);border-radius:10px;
+  padding:11px 12px;cursor:pointer;
+  transition:background .15s,border-color .15s;
+}
+button:hover{background:var(--card);border-color:#BFB9D0}
+button:active{transform:scale(.99)}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.hint{color:var(--ink-soft);font-size:14px;margin:14px 0 0}
+.guide{margin-top:38px;border-top:1px solid var(--line);padding-top:26px}
+.guide h2{font-family:"Reem Kufi",serif;font-size:21px;font-weight:600;margin:0 0 10px}
+.guide p{margin:0 0 14px;color:var(--ink-soft);font-size:15px;max-width:60ch}
+.rings{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.rings li{display:flex;gap:12px;align-items:baseline;font-size:15px;color:var(--ink-soft)}
+.rings b{font-weight:500;color:var(--ink);min-width:96px;flex:none}
+footer{margin-top:34px;font-size:13px;color:var(--ink-soft)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <h1>عجلة المشاعر</h1>
+  <p class="sub">لفّ العجلة بإيدك، ودوس على أي جزء عشان تعرف اسم اللي بتحسّه بالظبط.</p>
+</header>
+
+<div class="readout">
+  <span class="dot" id="dot" aria-hidden="true"></span>
+  <div>
+    <p class="fam" id="fam">مختارتش حاجة لسه</p>
+    <p class="pick" id="pick">اختار شعور</p>
+  </div>
+</div>
+
+<div id="wrap"></div>
+
+<div class="controls">
+  <button id="reset" type="button">رجّعها لمكانها</button>
+  <button id="spin" type="button">لفّة كاملة</button>
+</div>
+
+<p class="hint">على الموبايل اسحب بصباعك. على الكمبيوتر اسحب بالماوس، أو دوس على العجلة واستعمل أسهم الكيبورد.</p>
+
+<section class="guide">
+  <h2>إزاي تقراها</h2>
+  <p>العجلة بتبدأ من الجوّه وتوسّع لبرّه. كل ما تروح لبرّه الكلمة بتبقى أدق، وده اللي بيفرق: إنك تعرف إنك مش «زعلان» وخلاص، إنما «مهجور» أو «خامل» أو «نادم».</p>
+  <ul class="rings">
+    <li><b>النص</b><span>ستة مشاعر أساسية، كل واحد بلون.</span></li>
+    <li><b>الحلقة الوسطى</b><span>تمنتاشر شعور فرعي بيوضّح الأساسي.</span></li>
+    <li><b>الحلقة الخارجية</b><span>ستة وتلاتين كلمة دقيقة، وهي اللي غالبًا بتلاقي نفسك فيها.</span></li>
+  </ul>
+</section>
+
+<footer>ملف واحد، شغّال من غير نت بعد أول فتحة. ابعته لأي حد.</footer>
+
+</div>
+
+<script>
+(function(){
+  var D = [
+    {n:"سعيد", c:["#FAEEDA","#F6C97A","#E9A233"], t:"#4A2A05", s:[
+      {n:"مُقدَّر", k:["محبوب","مُهم"]},
+      {n:"مبتهج", k:["متحمس","نشيط"]},
+      {n:"راضي",  k:["مطمئن","هادي"]}]},
+    {n:"مندهش", c:["#E2F4EE","#A3DFCB","#5BC3A2"], t:"#0A3B2E", s:[
+      {n:"متفاجئ", k:["مصدوم","مذهول"]},
+      {n:"فضولي",  k:["متشوق","منبهر"]},
+      {n:"مشوَّش",  k:["حائر","متردد"]}]},
+    {n:"خائف", c:["#ECEBFB","#C9C5F1","#A49CE4"], t:"#2A2461", s:[
+      {n:"قلقان", k:["متوتر","مرتبك"]},
+      {n:"مهدَّد", k:["ضعيف","عاجز"]},
+      {n:"مرعوب", k:["مذعور","مشلول"]}]},
+    {n:"حزين", c:["#E6F0FA","#B4D2F0","#7FB2E4"], t:"#0C3358", s:[
+      {n:"وحيد", k:["مهجور","معزول"]},
+      {n:"محبَط", k:["يائس","نادم"]},
+      {n:"منهك", k:["خامل","كئيب"]}]},
+    {n:"غاضب", c:["#FBEAEA","#F3BEBE","#E68F8F"], t:"#571818", s:[
+      {n:"مستاء", k:["منزعج","متضايق"]},
+      {n:"ناقم",  k:["حاقد","غيران"]},
+      {n:"ثائر",  k:["عدواني","مشتعل"]}]},
+    {n:"قرف", c:["#ECF3E0","#C4DC9C","#9BC463"], t:"#1F3A08", s:[
+      {n:"نافر",   k:["كاره","رافض"]},
+      {n:"مستنكر", k:["محتقر","منتقد"]},
+      {n:"مقزَّز",  k:["متقزز","ممتعض"]}]}
+  ];
+
+  var NS = "http://www.w3.org/2000/svg";
+  var C = 200, R0 = 58, R1 = 110, R2 = 180;
+  var rot = 0, labels = [], lastPath = null, moved = false;
+  var dragging = false, startAng = 0, startRot = 0;
+
+  function el(t,a){ var e=document.createElementNS(NS,t); for(var k in a) e.setAttribute(k,a[k]); return e; }
+  function pt(a,r){ var d=(a-90)*Math.PI/180; return [C+r*Math.cos(d), C+r*Math.sin(d)]; }
+  function seg(a0,a1,r0,r1){
+    var p1=pt(a0,r1), p2=pt(a1,r1), p3=pt(a1,r0), p4=pt(a0,r0);
+    var d = "M"+p1[0]+" "+p1[1]+" A"+r1+" "+r1+" 0 0 1 "+p2[0]+" "+p2[1]+" L"+p3[0]+" "+p3[1];
+    if(r0 > 0) d += " A"+r0+" "+r0+" 0 0 0 "+p4[0]+" "+p4[1];
+    return d + " Z";
+  }
+
+  var svg = el("svg",{ viewBox:"0 0 400 400", tabindex:"0", role:"img",
+    "aria-label":"عجلة مشاعر تفاعلية: ستة مشاعر أساسية، تمنتاشر فرعي، وستة وتلاتين تفصيلي" });
+  var root = el("g",{});
+  var gWedges = el("g",{});
+  var gLabels = el("g",{});
+  root.appendChild(gWedges);
+  root.appendChild(gLabels);
+  svg.appendChild(root);
+
+  function add(d, fill, txt, ang, rad, fs, tc, fam, famColor){
+    var p = el("path",{ d:d, fill:fill, stroke:"#F3F1F6", "stroke-width":"1" });
+    p.style.cursor = "pointer";
+    p.addEventListener("click", function(){ if(!moved) choose(p, txt, fam, famColor); });
+    gWedges.appendChild(p);
+
+    var t = el("text",{
+      "text-anchor":"middle", "dominant-baseline":"central",
+      "font-size":fs, "font-weight":"400", fill:tc,
+      x:(C+rad), y:C,
+      style:"pointer-events:none;font-family:'IBM Plex Sans Arabic',sans-serif"
+    });
+    t.textContent = txt;
+    gLabels.appendChild(t);
+    labels.push({ e:t, a:ang, r:rad });
+  }
+
+  for(var i=0;i<6;i++){
+    var f = D[i], A = i*60;
+    add(seg(A,A+60,0,R0), f.c[2], f.n, A+30, 33, 13, f.t, f.n, f.c[2]);
+    for(var j=0;j<3;j++){
+      var s = f.s[j], B = A + j*20;
+      add(seg(B,B+20,R0,R1), f.c[1], s.n, B+10, (R0+R1)/2, 12, f.t, f.n, f.c[2]);
+      for(var m=0;m<2;m++){
+        var E = B + m*10;
+        add(seg(E,E+10,R1,R2), f.c[0], s.k[m], E+5, (R1+R2)/2, 11, f.t, f.n, f.c[2]);
+      }
+    }
+  }
+
+  function update(){
+    root.setAttribute("transform","rotate("+rot+" "+C+" "+C+")");
+    for(var n=0;n<labels.length;n++){
+      var L = labels[n];
+      var eff = ((L.a + rot) % 360 + 360) % 360;
+      var flip = eff > 180 && eff < 360;
+      L.e.setAttribute("transform",
+        "rotate("+(L.a - 90)+" "+C+" "+C+")" + (flip ? " rotate(180 "+(C+L.r)+" "+C+")" : ""));
+    }
+  }
+
+  function choose(p, name, fam, color){
+    if(lastPath) lastPath.setAttribute("stroke-width","1");
+    lastPath = p;
+    p.setAttribute("stroke-width","3.5");
+    gWedges.appendChild(p);
+    document.getElementById("pick").textContent = name;
+    document.getElementById("fam").textContent = (name === fam) ? "شعور أساسي" : "من عيلة: " + fam;
+    document.getElementById("dot").style.background = color;
+  }
+
+  var wrap = document.getElementById("wrap");
+  wrap.appendChild(svg);
+  update();
+
+  function angleOf(ev){
+    var b = svg.getBoundingClientRect();
+    return Math.atan2(ev.clientY - b.top - b.height/2, ev.clientX - b.left - b.width/2) * 180 / Math.PI;
+  }
+  svg.addEventListener("pointerdown", function(ev){
+    dragging = true; moved = false; startAng = angleOf(ev); startRot = rot;
+    svg.setPointerCapture(ev.pointerId); wrap.classList.add("grabbing");
+  });
+  svg.addEventListener("pointermove", function(ev){
+    if(!dragging) return;
+    var d = angleOf(ev) - startAng;
+    if(Math.abs(d) > 2) moved = true;
+    rot = startRot + d; update();
+  });
+  function endDrag(){
+    dragging = false; wrap.classList.remove("grabbing");
+    setTimeout(function(){ moved = false; }, 60);
+  }
+  svg.addEventListener("pointerup", endDrag);
+  svg.addEventListener("pointercancel", endDrag);
+  svg.addEventListener("keydown", function(ev){
+    if(ev.key === "ArrowRight" || ev.key === "ArrowDown"){ rot += 10; update(); ev.preventDefault(); }
+    if(ev.key === "ArrowLeft"  || ev.key === "ArrowUp"){   rot -= 10; update(); ev.preventDefault(); }
+  });
+
+  document.getElementById("reset").addEventListener("click", function(){ rot = 0; update(); });
+  document.getElementById("spin").addEventListener("click", function(){
+    if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){ rot += 360; update(); return; }
+    var from = rot, to = rot + 360, t0 = performance.now();
+    (function frame(now){
+      var k = Math.min(1, (now - t0) / 1200);
+      rot = from + (to - from) * (1 - Math.pow(1 - k, 3));
+      update();
+      if(k < 1) requestAnimationFrame(frame);
+    })(t0);
+  });
+})();
+</script>
+</body>
+</html>
