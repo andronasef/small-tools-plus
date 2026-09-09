@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مصلح نصوص نوشن</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            background-color: #f7f7f5;
+        }
+        .notion-shadow {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+        }
+        .btn-notion {
+            background-color: #2383e2;
+            transition: all 0.2s ease;
+        }
+        .btn-notion:hover {
+            background-color: #0070df;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-3xl mx-auto">
+        <!-- Header -->
+        <div class="flex items-center gap-3 mb-8">
+            <div class="bg-black text-white p-2 rounded-lg text-2xl">📝</div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">مصلح نصوص نوشن (Notion)</h1>
+                <p class="text-sm text-gray-500">نظف النص وخليه جاهز للصق كـ Blocks مرتبة</p>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="bg-white rounded-xl notion-shadow border border-gray-200 overflow-hidden mb-6">
+            <div class="px-4 py-2 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">النص الأصلي</span>
+                <button onclick="clearInput()" class="text-xs text-red-500 hover:text-red-700">مسح الكل</button>
+            </div>
+            <textarea id="inputText" 
+                class="w-full h-48 p-4 focus:outline-none resize-none text-gray-700 leading-relaxed" 
+                placeholder="إرمي النص اللي بيبوظ هنا..."></textarea>
+        </div>
+
+        <!-- Action Button -->
+        <div class="flex justify-center mb-6">
+            <button onclick="cleanText()" 
+                class="btn-notion text-white px-8 py-3 rounded-full font-bold shadow-lg flex items-center gap-2 transform active:scale-95">
+                <span>تجهيز النص لـ نوشن</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M11.3 1.047a1 1 0 01.897.447l4.103 6.155A1 1 0 0115.467 9.143H13v7a1 1 0 01-1 1H8a1 1 0 01-1-1V9.143H4.533a1 1 0 01-.834-1.549l4.103-6.155a1 1 0 01.897-.447h1.6z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Output Area -->
+        <div id="outputContainer" class="hidden bg-white rounded-xl notion-shadow border border-gray-200 overflow-hidden">
+            <div class="px-4 py-2 bg-green-50 border-b border-gray-200 flex justify-between items-center">
+                <span class="text-xs font-semibold text-green-600 uppercase tracking-wider">النص الجاهز</span>
+                <span id="copyStatus" class="text-xs text-green-600 font-medium"></span>
+            </div>
+            <div id="outputText" class="w-full min-h-[100px] p-4 text-gray-700 whitespace-pre-wrap break-words leading-relaxed"></div>
+            <div class="p-4 bg-gray-50 border-t border-gray-200">
+                <button onclick="copyToClipboard()" 
+                    class="w-full bg-gray-800 text-white py-2 rounded-lg font-medium hover:bg-black transition-colors flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    نسخ النص المعدل
+                </button>
+            </div>
+        </div>
+
+        <!-- Tips -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <h3 class="text-blue-800 font-bold text-sm mb-1">ليه النص كان بيبوظ؟</h3>
+                <p class="text-blue-600 text-xs leading-relaxed">بسبب وجود مسافات خفية (Zero Width Spaces) أو تنسيقات HTML بتجبر نوشن يفتح Blocks جديدة لكل سطر بشكل عشوائي.</p>
+            </div>
+            <div class="bg-amber-50 p-4 rounded-lg border border-amber-100">
+                <h3 class="text-amber-800 font-bold text-sm mb-1">نصيحة ذكية</h3>
+                <p class="text-amber-600 text-xs leading-relaxed">لو بتنقل قوائم، الأداة دي هتحطلك "-" في بداية السطر عشان نوشن يحولها Bullet List تلقائياً أول ما تعمل لصق.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function cleanText() {
+            const input = document.getElementById('inputText').value;
+            if (!input.trim()) return;
+
+            // 1. Remove hidden characters and normalize whitespace
+            let cleaned = input.replace(/[\u200B-\u200D\uFEFF]/g, ''); // Clear hidden characters
+            
+            // 2. Fix multiple newlines (reduce to max 2)
+            cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+            
+            // 3. Trim lines
+            cleaned = cleaned.split('\n').map(line => line.trim()).join('\n');
+
+            // 4. Handle common bullet patterns to ensure Notion reads them as lists
+            // Replace middle dots or strange bullets with standard markdown dash
+            cleaned = cleaned.replace(/^[•●○◘■]\s*/gm, '- ');
+
+            const outputDiv = document.getElementById('outputText');
+            const container = document.getElementById('outputContainer');
+            
+            outputDiv.textContent = cleaned;
+            container.classList.remove('hidden');
+            
+            // Auto scroll to output
+            container.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('outputText').textContent;
+            const status = document.getElementById('copyStatus');
+            
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                status.textContent = '✅ تم النسخ بنجاح!';
+                setTimeout(() => { status.textContent = ''; }, 3000);
+            } catch (err) {
+                status.textContent = '❌ فشل النسخ';
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function clearInput() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('outputContainer').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
