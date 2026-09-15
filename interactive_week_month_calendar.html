@@ -111,7 +111,7 @@
 
       <!-- Live Current Week Highlight Banner -->
       <div class="w-full md:w-auto flex flex-wrap items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700/60 text-xs sm:text-sm">
-        <div class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-slate-200/60 dark:border-slate-700">
+        <div onclick="copyCurrentRealWeek()" title="Click to copy current week days (e.g. 1-7)" class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-slate-200/60 dark:border-slate-700 cursor-pointer hover:border-brand-500 transition">
           <span class="text-slate-500 dark:text-slate-400">Current Week:</span>
           <span id="currentWeekNumberHero" class="font-bold font-mono text-brand-600 dark:text-brand-400 text-sm">W--</span>
         </div>
@@ -222,9 +222,15 @@
 
           <div class="flex items-center justify-between mb-4">
             <span class="text-xs font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">Selected Week Overview</span>
-            <span id="sidebarWeekTag" class="px-2.5 py-0.5 text-xs font-mono font-bold rounded-full bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
-              WEEK --
-            </span>
+            <div class="flex items-center gap-2">
+              <button id="sidebarCopyWeekBtn" onclick="copySelectedWeekDays()" title="Copy week days (e.g. 1-7)" class="flex items-center gap-1 px-2.5 py-0.5 text-xs font-mono font-bold rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <span id="sidebarCopyRangePill">--</span>
+              </button>
+              <span id="sidebarWeekTag" class="px-2.5 py-0.5 text-xs font-mono font-bold rounded-full bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                WEEK --
+              </span>
+            </div>
           </div>
 
           <!-- Big Week Display -->
@@ -457,11 +463,22 @@
             : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-slate-700'
         }`;
         
+        // Calculate week day range for tooltip and copy (e.g. 1-7)
+        const weekStartTemp = new Date(currentPointer);
+        const weekEndTemp = new Date(currentPointer);
+        weekEndTemp.setDate(weekEndTemp.getDate() + 6);
+        const weekDaysText = `${weekStartTemp.getDate()}-${weekEndTemp.getDate()}`;
+
+        weekBadge.title = `Click to copy week days: ${weekDaysText}`;
         weekBadge.innerHTML = `
-          <span>W${String(weekIso.weekNumber).padStart(2, '0')}</span>
+          <div class="flex items-center gap-1">
+            <span>W${String(weekIso.weekNumber).padStart(2, '0')}</span>
+            <svg class="w-3 h-3 opacity-50 hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          </div>
           ${isCurrentWeekRow ? '<span class="text-[9px] uppercase tracking-widest font-sans font-bold">Now</span>' : ''}
         `;
         
+        weekCol.title = `Click to copy week days: ${weekDaysText}`;
         weekCol.appendChild(weekBadge);
         weekRow.appendChild(weekCol);
 
@@ -527,8 +544,9 @@
           }
           dayCell.appendChild(bottomPreview);
 
-          // Click handler for this day
-          dayCell.addEventListener('click', () => {
+          // Click handler for this day (stops bubbling to week row so day selection is isolated)
+          dayCell.addEventListener('click', (e) => {
+            e.stopPropagation();
             selectDate(dayDate);
           });
 
@@ -538,7 +556,7 @@
           currentPointer.setDate(currentPointer.getDate() + 1);
         }
 
-        // Entire row click to select this week
+        // Entire row click to select and copy this week
         weekRow.addEventListener('click', () => {
           selectWeek(capturedWeekStart, capturedWeekNum);
         });
@@ -562,6 +580,14 @@
       selectedWeekNum = weekNum;
       // Default selected date to Monday of that week
       selectedDate = new Date(weekStartDate);
+
+      // Copy start and end week days to clipboard (e.g. 1-7)
+      const weekStart = new Date(weekStartDate);
+      const weekEnd = new Date(weekStartDate);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      const weekDaysRange = `${weekStart.getDate()}-${weekEnd.getDate()}`;
+      copyToClipboard(weekDaysRange);
+
       renderCalendar();
     }
 
@@ -593,10 +619,16 @@
       const weekStart = getWeekMonday(selectedDate);
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
+      const weekDaysRange = `${weekStart.getDate()}-${weekEnd.getDate()}`;
 
       const options = { month: 'short', day: 'numeric' };
       const rangeText = `${weekStart.toLocaleDateString(undefined, options)} - ${weekEnd.toLocaleDateString(undefined, options)}, ${weekEnd.getFullYear()}`;
       document.getElementById('sidebarWeekRange').textContent = `Week span: ${rangeText}`;
+
+      const copyRangePill = document.getElementById('sidebarCopyRangePill');
+      if (copyRangePill) {
+        copyRangePill.textContent = weekDaysRange;
+      }
 
       // Week progress (if viewing current week in real life, calculate elapsed days; else show 100% or 0%)
       const realTodayIso = getISOWeekNumber(currentRealDate);
@@ -736,6 +768,71 @@
       }
     });
 
+    // --- Clipboard Copy & Toast Feedback ---
+    function copyToClipboard(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+          showCopyToast(text);
+        }).catch(() => {
+          fallbackCopy(text);
+        });
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+        showCopyToast(text);
+      } catch (e) {
+        console.error('Fallback copy failed', e);
+      }
+    }
+
+    let copyToastTimer = null;
+    function showCopyToast(rangeStr) {
+      const toast = document.getElementById('copyToast');
+      const toastText = document.getElementById('copyToastText');
+      if (!toast || !toastText) return;
+
+      toastText.textContent = `Copied week days "${rangeStr}" to clipboard`;
+      toast.classList.remove('opacity-0', 'translate-y-3', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      if (copyToastTimer) clearTimeout(copyToastTimer);
+      copyToastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-3', 'pointer-events-none');
+      }, 2200);
+    }
+
+    function copySelectedWeekDays() {
+      const weekStart = getWeekMonday(selectedDate);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      const range = `${weekStart.getDate()}-${weekEnd.getDate()}`;
+      copyToClipboard(range);
+    }
+
+    function copyCurrentRealWeek() {
+      const now = new Date();
+      const weekStart = getWeekMonday(now);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      const range = `${weekStart.getDate()}-${weekEnd.getDate()}`;
+      copyToClipboard(range);
+    }
+
     // --- Bootstrapping on Load ---
     window.onload = function () {
       initTheme();
@@ -744,5 +841,15 @@
       goToToday();
     };
   </script>
+
+  <!-- Copy Notification Toast -->
+  <div id="copyToast" class="fixed bottom-6 right-6 z-50 transform transition-all duration-200 opacity-0 translate-y-3 pointer-events-none flex items-center gap-2.5 bg-slate-900/95 dark:bg-white text-white dark:text-slate-900 px-4 py-3 rounded-2xl shadow-xl border border-slate-700/50 dark:border-slate-200/50 backdrop-blur-sm text-xs font-sans font-medium">
+    <div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 dark:text-emerald-600 flex items-center justify-center flex-none">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+    <span id="copyToastText">Copied week days to clipboard</span>
+  </div>
 </body>
 </html>
