@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Week & Month Calendar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom styling & smooth transitions */
+    * {
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .current-week-row {
+      background: linear-gradient(90deg, rgba(99, 102, 241, 0.08) 0%, rgba(99, 102, 241, 0.02) 100%);
+      box-shadow: inset 3px 0 0 0 #6366f1;
+    }
+    .dark .current-week-row {
+      background: linear-gradient(90deg, rgba(99, 102, 241, 0.18) 0%, rgba(99, 102, 241, 0.03) 100%);
+      box-shadow: inset 3px 0 0 0 #818cf8;
+    }
+    .pulsing-indicator {
+      box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+      animation: pulse-ring 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    }
+    @keyframes pulse-ring {
+      0% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 8px rgba(99, 102, 241, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+      }
+    }
+    /* Custom thin scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.4);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(156, 163, 175, 0.7);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased transition-colors selection:bg-brand-500 selection:text-white">
+
+  <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
+      
+      <!-- Brand & Live Tracker -->
+      <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-start">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center text-white shadow-md shadow-brand-500/30">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+              WeekTrack Calendar
+              <span id="headerLiveBadge" class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                ● Live
+              </span>
+            </h1>
+            <p id="liveClock" class="text-xs font-mono text-slate-500 dark:text-slate-400">Loading current time...</p>
+          </div>
+        </div>
+
+        <!-- Mobile Quick Return Today Button -->
+        <button onclick="goToToday()" class="md:hidden px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-500 text-white shadow-sm hover:bg-brand-600">
+          Today
+        </button>
+      </div>
+
+      <!-- Live Current Week Highlight Banner -->
+      <div class="w-full md:w-auto flex flex-wrap items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700/60 text-xs sm:text-sm">
+        <div class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-slate-200/60 dark:border-slate-700">
+          <span class="text-slate-500 dark:text-slate-400">Current Week:</span>
+          <span id="currentWeekNumberHero" class="font-bold font-mono text-brand-600 dark:text-brand-400 text-sm">W--</span>
+        </div>
+        <div class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-slate-200/60 dark:border-slate-700">
+          <span class="text-slate-500 dark:text-slate-400">Today:</span>
+          <span id="currentDayHero" class="font-semibold text-slate-800 dark:text-slate-200">Day - of 7</span>
+        </div>
+        <button onclick="goToToday()" title="Jump to today's date" class="hidden md:inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium shadow-sm transition active:scale-95">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Jump to Today
+        </button>
+      </div>
+
+      <!-- Controls: Theme Toggle -->
+      <div class="flex items-center space-x-2">
+        <button id="themeToggleBtn" onclick="toggleDarkMode()" class="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Toggle Dark/Light Mode">
+          <svg id="themeIconSun" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/></svg>
+          <svg id="themeIconMoon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Left Column: Primary Calendar Grid (8 cols) -->
+      <section class="lg:col-span-8 flex flex-col space-y-4">
+        
+        <!-- Navigation bar for months -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center space-x-3">
+            <h2 id="calendarMonthYearTitle" class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+              Month Year
+            </h2>
+            <span id="calendarCurrentMonthTag" class="hidden px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+              Current Month
+            </span>
+          </div>
+
+          <!-- Controls: Prev, Next, Today Quick Selector -->
+          <div class="flex items-center space-x-2">
+            <button onclick="changeMonth(-1)" class="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition" title="Previous Month">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <button onclick="goToToday()" class="px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-xl text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition">
+              Today
+            </button>
+            <button onclick="changeMonth(1)" class="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition" title="Next Month">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Legend / Distinguishers explanation -->
+        <div class="flex flex-wrap items-center gap-3 px-2 text-xs text-slate-500 dark:text-slate-400">
+          <div class="flex items-center gap-1.5">
+            <span class="w-3 h-3 rounded-full bg-brand-600 inline-block"></span>
+            <span>Current Day</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-3 h-3 rounded bg-brand-500/20 border-l-2 border-brand-500 inline-block"></span>
+            <span>Current Week (Active)</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="px-1.5 py-0.5 rounded font-mono font-bold text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">W##</span>
+            <span>ISO Week Number</span>
+          </div>
+          <div class="flex items-center gap-1.5 ml-auto text-[11px] italic">
+            <span>Click any day or week row to inspect</span>
+          </div>
+        </div>
+
+        <!-- The Calendar Grid Container -->
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden">
+          
+          <!-- Calendar Header Row -->
+          <div class="grid grid-cols-8 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 text-center font-semibold text-xs text-slate-500 dark:text-slate-400 py-3">
+            <div class="border-r border-slate-200 dark:border-slate-800 flex items-center justify-center font-mono font-bold text-brand-600 dark:text-brand-400">
+              WEEK
+            </div>
+            <div>MON</div>
+            <div>TUE</div>
+            <div>WED</div>
+            <div>THU</div>
+            <div>FRI</div>
+            <div class="text-rose-500/80 dark:text-rose-400/80">SAT</div>
+            <div class="text-rose-500/80 dark:text-rose-400/80">SUN</div>
+          </div>
+
+          <!-- Dynamic Calendar Rows container (Weeks) -->
+          <div id="calendarWeeksBody" class="divide-y divide-slate-100 dark:divide-slate-800/60">
+            <!-- Weeks injected via Javascript -->
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- Right Column: Week & Day Breakdown Panel (4 cols) -->
+      <aside class="lg:col-span-4 flex flex-col space-y-6">
+        
+        <!-- Focused Week Card -->
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 relative overflow-hidden">
+          <!-- Background accent glow -->
+          <div class="absolute -top-12 -right-12 w-36 h-36 bg-brand-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">Selected Week Overview</span>
+            <span id="sidebarWeekTag" class="px-2.5 py-0.5 text-xs font-mono font-bold rounded-full bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+              WEEK --
+            </span>
+          </div>
+
+          <!-- Big Week Display -->
+          <div class="flex items-baseline gap-2 mb-2">
+            <span class="text-4xl font-extrabold font-mono tracking-tight text-slate-900 dark:text-white" id="sidebarWeekNumDisplay">--</span>
+            <span class="text-slate-500 dark:text-slate-400 text-sm font-medium">of 52 weeks</span>
+          </div>
+          
+          <p id="sidebarWeekRange" class="text-sm font-medium text-slate-600 dark:text-slate-300 mb-5">
+            Select a week to see date range
+          </p>
+
+          <!-- Week Progress Gauge -->
+          <div class="space-y-2 mb-5">
+            <div class="flex justify-between text-xs font-semibold">
+              <span class="text-slate-600 dark:text-slate-400">Week Progress</span>
+              <span id="weekProgressPercent" class="font-mono text-brand-600 dark:text-brand-400">0%</span>
+            </div>
+            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+              <div id="weekProgressBar" class="bg-brand-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Year Progress Gauge -->
+          <div class="space-y-2 mb-6">
+            <div class="flex justify-between text-xs font-semibold">
+              <span class="text-slate-600 dark:text-slate-400">Year Progress (<span id="sidebarYearNum">2026</span>)</span>
+              <span id="yearProgressPercent" class="font-mono text-indigo-500">0%</span>
+            </div>
+            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+              <div id="yearProgressBar" class="bg-indigo-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Breakdown of Days in this Week -->
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3">
+            Days in this Week
+          </h4>
+          <div id="sidebarWeekDaysList" class="grid grid-cols-7 gap-1 text-center font-mono text-xs">
+            <!-- Day buttons rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Selected Day Card & Personal Notes Widget -->
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col flex-grow">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Day Details & Notes</h3>
+            <span id="isTodayBadge" class="hidden px-2 py-0.5 text-[10px] font-bold uppercase rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+              TODAY
+            </span>
+          </div>
+
+          <div class="mb-4">
+            <div id="sidebarSelectedDayName" class="text-xl font-bold text-slate-900 dark:text-white">
+              Wednesday
+            </div>
+            <div id="sidebarSelectedDateFormatted" class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              September 16, 2026
+            </div>
+          </div>
+
+          <!-- Day Quick Note Input -->
+          <div class="flex-grow flex flex-col space-y-2">
+            <label for="dayNoteInput" class="text-xs font-medium text-slate-600 dark:text-slate-400">
+              Personal Note / Goal for this Day:
+            </label>
+            <textarea id="dayNoteInput" rows="3" placeholder="Add a note or milestone for this day..." class="w-full rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 p-3 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none transition"></textarea>
+            
+            <div class="flex items-center justify-between pt-1">
+              <span id="saveStatus" class="text-xs text-slate-400 italic">Saved automatically</span>
+              <button onclick="saveCurrentNote()" class="px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-xs font-semibold shadow-sm transition">
+                Save Note
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    // --- Application State ---
+    const now = new Date();
+    let currentRealDate = new Date(); // The absolute real today
+    let viewDate = new Date(currentRealDate.getFullYear(), currentRealDate.getMonth(), 1); // Month viewed in calendar
+    let selectedDate = new Date(currentRealDate); // Currently highlighted date
+    let selectedWeekNum = null; // Currently highlighted week number
+
+    // Notes storage
+    const STORAGE_KEY = 'weektrack_calendar_notes';
+    let notesData = {};
+    try {
+      notesData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    } catch (e) {
+      notesData = {};
+    }
+
+    // --- ISO Week Number Helper Functions ---
+    /**
+     * ISO 8601 Week Number calculation
+     * ISO weeks start on Monday (day 1) and end on Sunday (day 7).
+     * Week 1 is the week with the first Thursday of the year.
+     */
+    function getISOWeekNumber(date) {
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      return {
+        weekNumber: weekNo,
+        year: d.getUTCFullYear()
+      };
+    }
+
+    /**
+     * Total ISO weeks in a given year (usually 52, sometimes 53)
+     */
+    function getISOWeeksInYear(year) {
+      const d = new Date(year, 11, 28); // Dec 28 is always in the last ISO week
+      return getISOWeekNumber(d).weekNumber;
+    }
+
+    /**
+     * Get the Monday (start) of the week for a given date
+     */
+    function getWeekMonday(date) {
+      const d = new Date(date);
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+      return new Date(d.setDate(diff));
+    }
+
+    /**
+     * Formats date to 'YYYY-MM-DD' key for storage
+     */
+    function formatDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    /**
+     * Checks if two dates are the exact same calendar day
+     */
+    function isSameDay(d1, d2) {
+      return d1.getFullYear() === d2.getFullYear() &&
+             d1.getMonth() === d2.getMonth() &&
+             d1.getDate() === d2.getDate();
+    }
+
+    // --- Live Clock & Hero Stats ---
+    function updateLiveClock() {
+      const realNow = new Date();
+      currentRealDate = realNow;
+
+      const timeStr = realNow.toLocaleTimeString(undefined, {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      const dateStr = realNow.toLocaleDateString(undefined, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+      document.getElementById('liveClock').textContent = `${dateStr} • ${timeStr}`;
+
+      const iso = getISOWeekNumber(realNow);
+      // Day of week: 1 (Mon) - 7 (Sun)
+      const dayOfWeekIso = realNow.getDay() === 0 ? 7 : realNow.getDay();
+      const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+      document.getElementById('currentWeekNumberHero').textContent = `W${String(iso.weekNumber).padStart(2, '0')}`;
+      document.getElementById('currentDayHero').textContent = `${dayNames[dayOfWeekIso - 1]} (${dayOfWeekIso}/7)`;
+    }
+
+    // --- Calendar Renderer ---
+    function renderCalendar() {
+      const year = viewDate.getFullYear();
+      const month = viewDate.getMonth();
+
+      // Update Title
+      const monthName = viewDate.toLocaleString(undefined, { month: 'long' });
+      document.getElementById('calendarMonthYearTitle').textContent = `${monthName} ${year}`;
+
+      // Check if viewing current real month
+      const isViewingCurrentMonth = (year === currentRealDate.getFullYear() && month === currentRealDate.getMonth());
+      document.getElementById('calendarCurrentMonthTag').classList.toggle('hidden', !isViewingCurrentMonth);
+
+      const calendarWeeksBody = document.getElementById('calendarWeeksBody');
+      calendarWeeksBody.innerHTML = '';
+
+      // First day of month
+      const firstDayOfMonth = new Date(year, month, 1);
+      // Last day of month
+      const lastDayOfMonth = new Date(year, month + 1, 0);
+
+      // Find the Monday on or before the 1st of this month
+      let startDate = getWeekMonday(firstDayOfMonth);
+
+      // Build rows week by week until after the end of month
+      let currentPointer = new Date(startDate);
+      const todayIso = getISOWeekNumber(currentRealDate);
+
+      while (currentPointer <= lastDayOfMonth || currentPointer.getDay() !== 1) {
+        const weekRow = document.createElement('div');
+        const weekIso = getISOWeekNumber(currentPointer);
+        const isCurrentWeekRow = (weekIso.weekNumber === todayIso.weekNumber && weekIso.year === todayIso.year);
+        const isSelectedWeekRow = (selectedWeekNum === weekIso.weekNumber);
+
+        // Styling the week container
+        weekRow.className = `grid grid-cols-8 items-stretch transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/40 cursor-pointer ${
+          isCurrentWeekRow ? 'current-week-row' : ''
+        } ${isSelectedWeekRow && !isCurrentWeekRow ? 'bg-indigo-50/40 dark:bg-indigo-950/20' : ''}`;
+
+        // 1. Week Number Column (Col 1)
+        const weekCol = document.createElement('div');
+        weekCol.className = 'border-r border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center p-2 text-center select-none';
+        
+        // Week badge
+        const weekBadge = document.createElement('div');
+        weekBadge.className = `flex flex-col items-center justify-center px-2 py-1.5 rounded-xl font-mono text-xs font-bold transition-all ${
+          isCurrentWeekRow 
+            ? 'bg-brand-600 text-white shadow-md shadow-brand-500/30 ring-2 ring-brand-400' 
+            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-slate-700'
+        }`;
+        
+        weekBadge.innerHTML = `
+          <span>W${String(weekIso.weekNumber).padStart(2, '0')}</span>
+          ${isCurrentWeekRow ? '<span class="text-[9px] uppercase tracking-widest font-sans font-bold">Now</span>' : ''}
+        `;
+        
+        weekCol.appendChild(weekBadge);
+        weekRow.appendChild(weekCol);
+
+        // Capture starting date of this week row for week click
+        const capturedWeekStart = new Date(currentPointer);
+        const capturedWeekNum = weekIso.weekNumber;
+        weekCol.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectWeek(capturedWeekStart, capturedWeekNum);
+        });
+
+        // 2. Day Columns (Cols 2 - 8)
+        for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+          const dayCell = document.createElement('div');
+          const dayDate = new Date(currentPointer);
+          const isCurrentMonth = dayDate.getMonth() === month;
+          const isToday = isSameDay(dayDate, currentRealDate);
+          const isSelected = isSameDay(dayDate, selectedDate);
+          const dateKey = formatDateKey(dayDate);
+          const hasNote = Boolean(notesData[dateKey]);
+
+          dayCell.className = `relative min-h-[72px] sm:min-h-[88px] p-1.5 sm:p-2 flex flex-col justify-between transition-all select-none border-b sm:border-b-0 border-slate-100 dark:border-slate-800/40 ${
+            !isCurrentMonth ? 'text-slate-300 dark:text-slate-600 bg-slate-50/30 dark:bg-slate-950/20' : 'text-slate-800 dark:text-slate-200'
+          } ${
+            isSelected ? 'ring-2 ring-brand-500 bg-brand-50/50 dark:bg-brand-950/40 z-10 rounded-xl' : ''
+          }`;
+
+          // Top line: Day Number + markers
+          const topRow = document.createElement('div');
+          topRow.className = 'flex items-center justify-between';
+
+          // Day Number Circle/Pill
+          const dayPill = document.createElement('span');
+          dayPill.className = `w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-xl text-xs sm:text-sm font-semibold transition ${
+            isToday 
+              ? 'bg-brand-600 text-white font-bold pulsing-indicator shadow-md shadow-brand-500/30' 
+              : isSelected 
+                ? 'bg-brand-200 dark:bg-brand-900/60 text-brand-800 dark:text-brand-200'
+                : 'hover:bg-slate-200 dark:hover:bg-slate-800'
+          }`;
+          dayPill.textContent = dayDate.getDate();
+          topRow.appendChild(dayPill);
+
+          // Dot indicator if user added a note
+          if (hasNote) {
+            const noteDot = document.createElement('span');
+            noteDot.title = 'Contains note';
+            noteDot.className = 'w-2 h-2 rounded-full bg-amber-400 ring-2 ring-white dark:ring-slate-900 shadow-sm';
+            topRow.appendChild(noteDot);
+          }
+
+          dayCell.appendChild(topRow);
+
+          // Bottom line: Preview of note or status text
+          const bottomPreview = document.createElement('div');
+          bottomPreview.className = 'mt-1 text-[10px] leading-tight truncate font-sans';
+          if (hasNote) {
+            bottomPreview.className += ' text-slate-500 dark:text-slate-400';
+            bottomPreview.textContent = notesData[dateKey];
+          } else if (isToday) {
+            bottomPreview.className += ' text-brand-600 dark:text-brand-400 font-bold';
+            bottomPreview.textContent = 'Today';
+          }
+          dayCell.appendChild(bottomPreview);
+
+          // Click handler for this day
+          dayCell.addEventListener('click', () => {
+            selectDate(dayDate);
+          });
+
+          weekRow.appendChild(dayCell);
+
+          // Advance currentPointer by 1 day
+          currentPointer.setDate(currentPointer.getDate() + 1);
+        }
+
+        // Entire row click to select this week
+        weekRow.addEventListener('click', () => {
+          selectWeek(capturedWeekStart, capturedWeekNum);
+        });
+
+        calendarWeeksBody.appendChild(weekRow);
+      }
+
+      // Update right sidebar for currently selected date and week
+      updateSidebar();
+    }
+
+    // --- Selection and Navigation Handlers ---
+    function selectDate(date) {
+      selectedDate = new Date(date);
+      const iso = getISOWeekNumber(date);
+      selectedWeekNum = iso.weekNumber;
+      renderCalendar();
+    }
+
+    function selectWeek(weekStartDate, weekNum) {
+      selectedWeekNum = weekNum;
+      // Default selected date to Monday of that week
+      selectedDate = new Date(weekStartDate);
+      renderCalendar();
+    }
+
+    function changeMonth(delta) {
+      viewDate.setMonth(viewDate.getMonth() + delta);
+      renderCalendar();
+    }
+
+    function goToToday() {
+      const today = new Date();
+      currentRealDate = today;
+      viewDate = new Date(today.getFullYear(), today.getMonth(), 1);
+      selectedDate = new Date(today);
+      selectedWeekNum = getISOWeekNumber(today).weekNumber;
+      renderCalendar();
+    }
+
+    // --- Update Right Sidebar Info ---
+    function updateSidebar() {
+      const iso = getISOWeekNumber(selectedDate);
+      const totalWeeks = getISOWeeksInYear(selectedDate.getFullYear());
+
+      // Week Tag and Display
+      document.getElementById('sidebarWeekTag').textContent = `WEEK ${iso.weekNumber}`;
+      document.getElementById('sidebarWeekNumDisplay').textContent = `W${String(iso.weekNumber).padStart(2, '0')}`;
+      document.getElementById('sidebarYearNum').textContent = selectedDate.getFullYear();
+
+      // Calculate week start (Monday) and end (Sunday)
+      const weekStart = getWeekMonday(selectedDate);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+
+      const options = { month: 'short', day: 'numeric' };
+      const rangeText = `${weekStart.toLocaleDateString(undefined, options)} - ${weekEnd.toLocaleDateString(undefined, options)}, ${weekEnd.getFullYear()}`;
+      document.getElementById('sidebarWeekRange').textContent = `Week span: ${rangeText}`;
+
+      // Week progress (if viewing current week in real life, calculate elapsed days; else show 100% or 0%)
+      const realTodayIso = getISOWeekNumber(currentRealDate);
+      let weekPct = 0;
+      if (iso.weekNumber === realTodayIso.weekNumber && selectedDate.getFullYear() === currentRealDate.getFullYear()) {
+        const dayOfWeek = currentRealDate.getDay() === 0 ? 7 : currentRealDate.getDay();
+        weekPct = Math.round((dayOfWeek / 7) * 100);
+      } else if (selectedDate < currentRealDate) {
+        weekPct = 100;
+      } else {
+        weekPct = 0;
+      }
+      document.getElementById('weekProgressPercent').textContent = `${weekPct}%`;
+      document.getElementById('weekProgressBar').style.width = `${weekPct}%`;
+
+      // Year progress
+      const yearPct = Math.min(100, Math.round((iso.weekNumber / totalWeeks) * 100));
+      document.getElementById('yearProgressPercent').textContent = `${yearPct}%`;
+      document.getElementById('yearProgressBar').style.width = `${yearPct}%`;
+
+      // Populate Week Days Grid buttons in Sidebar
+      const weekDaysList = document.getElementById('sidebarWeekDaysList');
+      weekDaysList.innerHTML = '';
+      const dayNamesShort = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(weekStart);
+        d.setDate(d.getDate() + i);
+        const isCurrent = isSameDay(d, selectedDate);
+        const isRealToday = isSameDay(d, currentRealDate);
+
+        const dayBtn = document.createElement('button');
+        dayBtn.className = `p-1.5 rounded-xl flex flex-col items-center justify-center transition border ${
+          isCurrent 
+            ? 'bg-brand-600 text-white border-brand-500 shadow-sm' 
+            : isRealToday
+              ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border-brand-400 font-bold'
+              : 'bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
+        }`;
+
+        dayBtn.innerHTML = `
+          <span class="text-[10px] opacity-70">${dayNamesShort[i]}</span>
+          <span class="text-xs font-bold mt-0.5">${d.getDate()}</span>
+        `;
+
+        dayBtn.onclick = () => selectDate(d);
+        weekDaysList.appendChild(dayBtn);
+      }
+
+      // Selected Day Details
+      const fullDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      document.getElementById('sidebarSelectedDayName').textContent = fullDayNames[selectedDate.getDay()];
+      document.getElementById('sidebarSelectedDateFormatted').textContent = selectedDate.toLocaleDateString(undefined, {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+
+      const isToday = isSameDay(selectedDate, currentRealDate);
+      document.getElementById('isTodayBadge').classList.toggle('hidden', !isToday);
+
+      // Load Note for this date
+      const key = formatDateKey(selectedDate);
+      document.getElementById('dayNoteInput').value = notesData[key] || '';
+      document.getElementById('saveStatus').textContent = notesData[key] ? 'Saved note found' : 'No note for this day';
+    }
+
+    // --- Note Saving Logic ---
+    function saveCurrentNote() {
+      const key = formatDateKey(selectedDate);
+      const text = document.getElementById('dayNoteInput').value.trim();
+
+      if (text) {
+        notesData[key] = text;
+      } else {
+        delete notesData[key];
+      }
+
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(notesData));
+        const status = document.getElementById('saveStatus');
+        status.textContent = 'Saved!';
+        status.classList.add('text-emerald-500');
+        setTimeout(() => {
+          status.classList.remove('text-emerald-500');
+          status.textContent = 'Saved automatically';
+        }, 1500);
+      } catch (e) {
+        document.getElementById('saveStatus').textContent = 'Storage full or unavailable';
+      }
+
+      renderCalendar();
+    }
+
+    // Auto-save note on input blur or keystroke debounce
+    let noteDebounceTimer;
+    document.getElementById('dayNoteInput').addEventListener('input', () => {
+      document.getElementById('saveStatus').textContent = 'Saving...';
+      clearTimeout(noteDebounceTimer);
+      noteDebounceTimer = setTimeout(saveCurrentNote, 700);
+    });
+
+    // --- Dark Mode Handler ---
+    function initTheme() {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const storedTheme = localStorage.getItem('weektrack_theme');
+
+      if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+        document.getElementById('themeIconSun').classList.remove('hidden');
+        document.getElementById('themeIconMoon').classList.add('hidden');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('themeIconSun').classList.add('hidden');
+        document.getElementById('themeIconMoon').classList.remove('hidden');
+      }
+    }
+
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('weektrack_theme', isDark ? 'dark' : 'light');
+      document.getElementById('themeIconSun').classList.toggle('hidden', !isDark);
+      document.getElementById('themeIconMoon').classList.toggle('hidden', isDark);
+    }
+
+    // Keyboard navigation (Left/Right arrows for month)
+    window.addEventListener('keydown', (e) => {
+      if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') {
+        return;
+      }
+      if (e.key === 'ArrowLeft') {
+        changeMonth(-1);
+      } else if (e.key === 'ArrowRight') {
+        changeMonth(1);
+      } else if (e.key === 't' || e.key === 'T') {
+        goToToday();
+      }
+    });
+
+    // --- Bootstrapping on Load ---
+    window.onload = function () {
+      initTheme();
+      updateLiveClock();
+      setInterval(updateLiveClock, 1000);
+      goToToday();
+    };
+  </script>
+</body>
+</html>
