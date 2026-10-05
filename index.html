@@ -112,7 +112,7 @@
         </span>
         <div class="flex items-baseline gap-2">
           <span class="font-semibold text-sm tracking-tight text-slate-900 dark:text-zinc-100">Small Tools Plus</span>
-          <span class="text-xs text-slate-500 dark:text-zinc-400 font-mono">3 tools</span>
+          <span class="text-xs text-slate-500 dark:text-zinc-400 font-mono">5 tools</span>
         </div>
       </div>
 
@@ -171,21 +171,21 @@
           data-category="all"
           class="cat-filter active-filter px-3 py-1.5 rounded-md bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 transition"
         >
-          All (3)
+          All (5)
         </button>
         <button 
           onclick="setCategory('productivity')" 
           data-category="productivity"
           class="cat-filter px-3 py-1.5 rounded-md text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-850 transition"
         >
-          Productivity (2)
+          Productivity (3)
         </button>
         <button 
           onclick="setCategory('wellbeing')" 
           data-category="wellbeing"
           class="cat-filter px-3 py-1.5 rounded-md text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-850 transition"
         >
-          Wellbeing (1)
+          Wellbeing (2)
         </button>
       </div>
     </div>
@@ -316,6 +316,88 @@
         </div>
       </div>
 
+      <!-- CARD 4: DevFit Workout Guide -->
+      <div 
+        data-tool-id="daily-workout" 
+        data-category="wellbeing" 
+        data-keywords="workout exercise fitness developer stretching health 15 minute devfit"
+        class="tool-card group relative p-5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-925 hover:border-blue-500/50 dark:hover:border-blue-400/50 transition flex flex-col justify-between cursor-pointer"
+      >
+        <div>
+          <div class="flex items-center justify-between text-xs text-slate-400 dark:text-zinc-500 font-mono mb-3">
+            <span>04</span>
+            <span>daily-workout.html</span>
+          </div>
+
+          <h2 class="text-slate-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            <a href="daily-workout.html" class="after:absolute after:inset-0 focus:outline-none">
+              DevFit Workout Guide
+            </a>
+          </h2>
+
+          <div class="mt-3 flex items-center gap-2 text-xs text-slate-500 dark:text-zinc-400 font-mono">
+            <span>Wellbeing</span>
+            <span>•</span>
+            <span>15-Min Routine</span>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-zinc-850 flex items-center justify-between gap-2 relative z-10">
+          <button 
+            type="button"
+            onclick="toggleInlinePreview('daily-workout.html', 'DevFit Workout Guide', this)" 
+            class="preview-toggle-btn px-3 py-1.5 rounded text-xs font-medium text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-850 transition"
+          >
+            Preview
+          </button>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 group-hover:bg-blue-600 dark:group-hover:bg-blue-500 dark:group-hover:text-white transition">
+            <span>Open</span>
+            <kbd class="font-mono text-[10px] opacity-70">4</kbd>
+          </span>
+        </div>
+      </div>
+
+      <!-- CARD 5: Store Localizer -->
+      <div 
+        data-tool-id="store-localizer" 
+        data-category="productivity" 
+        data-keywords="google play store listing localization translate metadata app languages"
+        class="tool-card group relative p-5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-925 hover:border-blue-500/50 dark:hover:border-blue-400/50 transition flex flex-col justify-between cursor-pointer"
+      >
+        <div>
+          <div class="flex items-center justify-between text-xs text-slate-400 dark:text-zinc-500 font-mono mb-3">
+            <span>05</span>
+            <span>store-localizer.html</span>
+          </div>
+
+          <h2 class="text-slate-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            <a href="store-localizer.html" class="after:absolute after:inset-0 focus:outline-none">
+              Store Localizer
+            </a>
+          </h2>
+
+          <div class="mt-3 flex items-center gap-2 text-xs text-slate-500 dark:text-zinc-400 font-mono">
+            <span>Productivity</span>
+            <span>•</span>
+            <span>Listing Editor</span>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-zinc-850 flex items-center justify-between gap-2 relative z-10">
+          <button 
+            type="button"
+            onclick="toggleInlinePreview('store-localizer.html', 'Store Localizer', this)" 
+            class="preview-toggle-btn px-3 py-1.5 rounded text-xs font-medium text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-850 transition"
+          >
+            Preview
+          </button>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 group-hover:bg-blue-600 dark:group-hover:bg-blue-500 dark:group-hover:text-white transition">
+            <span>Open</span>
+            <kbd class="font-mono text-[10px] opacity-70">5</kbd>
+          </span>
+        </div>
+      </div>
+
     </div>
 
     <!-- Inline Dedicated Workbench Viewer (Appears on Demand) -->
@@ -385,6 +467,8 @@
         <span><kbd class="text-slate-700 dark:text-zinc-300">1</kbd> Calendar</span>
         <span><kbd class="text-slate-700 dark:text-zinc-300">2</kbd> Feelings</span>
         <span><kbd class="text-slate-700 dark:text-zinc-300">3</kbd> Notion</span>
+        <span><kbd class="text-slate-700 dark:text-zinc-300">4</kbd> Workout</span>
+        <span><kbd class="text-slate-700 dark:text-zinc-300">5</kbd> Localizer</span>
         <span><kbd class="text-slate-700 dark:text-zinc-300">/</kbd> Filter</span>
         <span><kbd class="text-slate-700 dark:text-zinc-300">D</kbd> Theme</span>
         <span><kbd class="text-slate-700 dark:text-zinc-300">Esc</kbd> Close</span>
@@ -566,6 +650,10 @@
         window.location.href = 'feelings-wheel-ar.html';
       } else if (e.key === '3') {
         window.location.href = 'notion-copy-helper.html';
+      } else if (e.key === '4') {
+        window.location.href = 'daily-workout.html';
+      } else if (e.key === '5') {
+        window.location.href = 'store-localizer.html';
       } else if (e.key === 'd' || e.key === 'D') {
         toggleTheme();
       } else if (e.key === 'r' || e.key === 'R') {
