@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Dashboard Zinc Colors */
+  --color-zinc-850: #1e1e24;
+  --color-zinc-925: #101014;
+  --color-zinc-950: #0a0a0c;
+
+  /* DevFit Colors */
+  --color-devDark: #0a0a0c;
+  --color-dev-dark: #0a0a0c;
+  --color-devCard: #121216;
+  --color-dev-card: #121216;
+  --color-devBorder: #24242e;
+  --color-dev-border: #24242e;
+  --color-terminalGreen: #10b981;
+  --color-terminal-green: #10b981;
+  --color-accentCyan: #06b6d4;
+  --color-accent-cyan: #06b6d4;
+  --color-accentAmber: #f59e0b;
+  --color-accent-amber: #f59e0b;
+  --color-accentPurple: #a855f7;
+  --color-accent-purple: #a855f7;
+
+  /* Calendar Brand Colors */
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-brand-900: #312e81;
+
+  /* Sleep Calculator Colors */
+  --color-sleepCanvas: #0a0a0c;
+  --color-sleep-canvas: #0a0a0c;
+  --color-sleepCard: #121216;
+  --color-sleep-card: #121216;
+  --color-sleepElevated: #18181f;
+  --color-sleep-elevated: #18181f;
+  --color-sleepBorder: #24242e;
+  --color-sleep-border: #24242e;
+  --color-sleepGold: #FFDD88;
+  --color-sleep-gold: #FFDD88;
+}

@@ -27,9 +27,12 @@ small-tools-plus/
 ├── public/                       # Static public assets (copied directly to dist/)
 │   ├── CNAME                     # GitHub Pages custom domain (small.andronasef.com)
 │   ├── style.css                 # Unified Design System tokens & global dark theme
+│   ├── tailwind.css              # Pre-compiled static Tailwind bundle (zero CDN dependencies)
 │   ├── icons/                    # App-level PNGs (192, 512, maskable) & Lucide tool SVGs/PNGs
 │   └── workout-media/            # Local MP4 videos and GIFs (pre-cached for offline use)
 ├── src/
+│   ├── styles/
+│   │   └── tailwind.css          # Tailwind source with custom tokens and variants
 │   ├── data/
 │   │   └── tools.ts              # Single Source of Truth for all tools catalog metadata
 │   └── pages/

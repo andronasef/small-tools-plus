@@ -2,6 +2,9 @@
   "name": "small-tools-plus",
   "type": "module",
   "scripts": {
+    "build:css": "tailwindcss -i src/styles/tailwind.css -o public/tailwind.css --minify",
+    "prebuild": "bun run build:css",
+    "predev": "bun run build:css",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview"
@@ -9,6 +12,9 @@
   "dependencies": {},
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",
-    "astro": "^7.3.8"
+    "@tailwindcss/cli": "^4.3.3",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.3.8",
+    "tailwindcss": "^4.3.3"
   }
 }

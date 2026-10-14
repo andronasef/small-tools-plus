@@ -32,37 +32,16 @@ import { tools, categories } from '../data/tools';
   <meta name="apple-mobile-web-app-title" content="SmallTools+">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
+  <!-- Tailwind CSS (Offline-first compiled bundle) -->
+  <link rel="stylesheet" href="tailwind.css">
+
   <!-- Unified Theme Stylesheet -->
   <link rel="stylesheet" href="style.css">
-
-  <script is:inline>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
-          },
-          colors: {
-            zinc: {
-              850: '#1e1e24',
-              925: '#101014',
-              950: '#0a0a0c',
-            }
-          }
-        }
-      }
-    };
-  </script>
 
   <style>
     body {
@@ -132,7 +111,7 @@ import { tools, categories } from '../data/tools';
       <!-- Brand -->
       <div class="flex items-center gap-3">
         <a href="./" class="flex items-center gap-2 text-inherit no-underline">
-          <img src="icons/icon.svg" class="w-6 h-6 rounded-md shadow-sm" alt="Logo" />
+          <img src="icons/icon.svg" width="24" height="24" class="w-6 h-6 rounded-md shadow-sm" alt="Logo" />
           <span class="font-mono text-xs font-semibold text-slate-900 dark:text-zinc-100 px-2 py-0.5 rounded bg-slate-100 dark:bg-zinc-850 border border-slate-200 dark:border-zinc-700">
             stp://
           </span>
@@ -257,7 +236,7 @@ import { tools, categories } from '../data/tools';
                 class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition"
                 style={`background-color: ${tool.accentColor}18; border: 1px solid ${tool.accentColor}33; color: ${tool.accentColor};`}
               >
-                <img src={`icons/${tool.iconFile}`} class="w-5 h-5" alt="" />
+                <img src={`icons/${tool.iconFile}`} width="20" height="20" class="w-5 h-5" alt="" />
               </div>
               <div>
                 <h2 class="text-slate-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">

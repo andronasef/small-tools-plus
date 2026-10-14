@@ -14,7 +14,8 @@ export const GET: APIRoute = async () => {
     './icons/icon-192.png',
     './icons/icon-512.png',
     './icons/icon-maskable-512.png',
-    './style.css'
+    './style.css',
+    './tailwind.css'
   ];
 
   for (const tool of tools) {
@@ -40,7 +41,6 @@ export const GET: APIRoute = async () => {
   }
 
   const remoteAssets = [
-    'https://cdn.tailwindcss.com',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-regular-400.woff2',
