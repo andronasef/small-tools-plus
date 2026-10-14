@@ -221,14 +221,11 @@ import { tools, categories } from '../data/tools';
               <span class="font-mono text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800">
                 {tool.number}
               </span>
-              <div class="flex items-center gap-2 truncate ml-2">
-                {tool.mobile && (
-                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-medium">
-                    📱 Mobile
-                  </span>
-                )}
-                <span class="truncate">{tool.filename}</span>
-              </div>
+              {tool.mobile && (
+                <span title="Mobile PWA Ready" class="text-sm select-none">
+                  📱
+                </span>
+              )}
             </div>
 
             <div class="flex items-start gap-3.5">
@@ -244,24 +241,15 @@ import { tools, categories } from '../data/tools';
                     {tool.title}
                   </a>
                 </h2>
-                <div class="mt-1 flex items-center gap-2 text-xs text-slate-500 dark:text-zinc-400 font-mono">
+                <div class="mt-1 text-xs text-slate-500 dark:text-zinc-400 font-mono">
                   <span>{tool.category}</span>
-                  <span>•</span>
-                  <span>{tool.badge}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="mt-6 pt-4 border-t border-slate-100 dark:border-zinc-850 flex items-center justify-between gap-2 relative z-10">
-            <button 
-              type="button"
-              onclick={`toggleInlinePreview('${tool.file}', '${tool.title}', this)`}
-              class="preview-toggle-btn px-3 py-1.5 rounded text-xs font-medium text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-850 transition"
-            >
-              Preview
-            </button>
-            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 group-hover:bg-blue-600 dark:group-hover:bg-blue-500 dark:group-hover:text-white transition">
+          <div class="mt-5 pt-3 border-t border-slate-100 dark:border-zinc-850 flex items-center justify-end relative z-10">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 group-hover:bg-blue-600 dark:group-hover:bg-blue-500 dark:group-hover:text-white transition">
               <span>Open</span>
               <kbd class="font-mono text-[10px] opacity-70">{idx + 1}</kbd>
             </span>
@@ -269,47 +257,6 @@ import { tools, categories } from '../data/tools';
         </div>
       ))}
     </div>
-
-    <!-- Inline Dedicated Workbench Viewer (Appears on Demand) -->
-    <section id="previewWorkbench" class="hidden mt-8 pt-6 border-t border-slate-200 dark:border-zinc-800">
-      <div class="flex items-center justify-between pb-3">
-        <div class="flex items-center gap-3">
-          <span class="font-mono text-xs text-slate-400 dark:text-zinc-500">sandbox://</span>
-          <h3 id="workbenchTitle" class="text-slate-900 dark:text-zinc-100">Preview</h3>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <button 
-            type="button"
-            onclick="reloadWorkbench()" 
-            title="Reload frame (R)"
-            class="px-2.5 py-1 rounded text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-200 dark:hover:bg-zinc-850 transition"
-          >
-            Reload
-          </button>
-          <a 
-            id="workbenchExternalLink" 
-            href="#" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            class="px-2.5 py-1 rounded text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-200 dark:hover:bg-zinc-850 transition"
-          >
-            Open in Tab ↗
-          </a>
-          <button 
-            type="button"
-            onclick="closeWorkbench()" 
-            class="px-2.5 py-1 rounded text-xs text-slate-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-200 dark:hover:bg-zinc-850 transition"
-          >
-            Close (Esc)
-          </button>
-        </div>
-      </div>
-
-      <div class="w-full h-[650px] border border-slate-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-zinc-950 overflow-hidden">
-        <iframe id="workbenchIframe" src="about:blank" class="w-full h-full border-0" title="Tool Preview Frame"></iframe>
-      </div>
-    </section>
 
     <!-- Empty Filter State -->
     <div id="noResultsState" class="hidden text-center py-16 px-4">
@@ -418,7 +365,7 @@ import { tools, categories } from '../data/tools';
         ))}
         <span><kbd class="text-slate-700 dark:text-zinc-300">/</kbd> Filter</span>
         <span><kbd class="text-slate-700 dark:text-zinc-300">D</kbd> Theme</span>
-        <span><kbd class="text-slate-700 dark:text-zinc-300">Esc</kbd> Close</span>
+        <span><kbd class="text-slate-700 dark:text-zinc-300">Esc</kbd> Clear</span>
       </div>
     </div>
   </footer>
@@ -532,53 +479,6 @@ import { tools, categories } from '../data/tools';
 
     searchInput?.addEventListener('input', filterTools);
 
-    // Dedicated Inline Workbench Viewer Logic
-    const previewWorkbench = document.getElementById('previewWorkbench');
-    const workbenchIframe = document.getElementById('workbenchIframe');
-    const workbenchTitle = document.getElementById('workbenchTitle');
-    const workbenchExternalLink = document.getElementById('workbenchExternalLink');
-    let activePreviewUrl = null;
-
-    function toggleInlinePreview(url, title, triggerBtn) {
-      if (activePreviewUrl === url && !previewWorkbench.classList.contains('hidden')) {
-        closeWorkbench();
-        return;
-      }
-
-      activePreviewUrl = url;
-      workbenchTitle.textContent = title;
-      workbenchExternalLink.href = url;
-      workbenchIframe.src = url;
-      previewWorkbench.classList.remove('hidden');
-
-      document.querySelectorAll('.preview-toggle-btn').forEach(btn => {
-        btn.textContent = 'Preview';
-      });
-      if (triggerBtn) {
-        triggerBtn.textContent = 'Hide';
-      }
-
-      previewWorkbench.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    function closeWorkbench() {
-      previewWorkbench?.classList.add('hidden');
-      if (workbenchIframe) workbenchIframe.src = 'about:blank';
-      activePreviewUrl = null;
-      document.querySelectorAll('.preview-toggle-btn').forEach(btn => {
-        btn.textContent = 'Preview';
-      });
-    }
-
-    function reloadWorkbench() {
-      if (activePreviewUrl && workbenchIframe) {
-        workbenchIframe.src = 'about:blank';
-        setTimeout(() => {
-          workbenchIframe.src = activePreviewUrl;
-        }, 50);
-      }
-    }
-
     // Keyboard Shortcuts
     const toolUrls = Array.from(document.querySelectorAll('.tool-card a')).map(a => a.getAttribute('href'));
 
@@ -592,9 +492,7 @@ import { tools, categories } from '../data/tools';
       }
 
       if (e.key === 'Escape') {
-        if (!previewWorkbench.classList.contains('hidden')) {
-          closeWorkbench();
-        } else if (searchInput.value) {
+        if (searchInput.value) {
           clearSearch();
         }
       } else if (e.key === '/' || (e.ctrlKey && e.key === 'k') || (e.metaKey && e.key === 'k')) {
@@ -608,10 +506,6 @@ import { tools, categories } from '../data/tools';
         }
       } else if (e.key === 'd' || e.key === 'D') {
         toggleTheme();
-      } else if (e.key === 'r' || e.key === 'R') {
-        if (!previewWorkbench.classList.contains('hidden')) {
-          reloadWorkbench();
-        }
       }
     });
 
