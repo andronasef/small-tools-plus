@@ -1,15 +1,29 @@
+---
+import { tools } from '../../data/tools';
+const tool = tools.find((t) => t.id === 'calendar')!;
+---
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Week & Month Calendar</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" type="image/svg+xml" href={`/icons/${tool.iconFile}`}>
+  <!-- PWA & Mobile Web App Meta -->
+  <link rel="manifest" href={`/${tool.manifest}`}>
+  <meta name="theme-color" content={tool.accentColor}>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href={`/icons/${tool.iconFile.replace('.svg', '-192.png')}`}>
+
+  <link rel="stylesheet" href="/style.css">
+  <script is:inline src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
-  <script>
+  <script is:inline>
     tailwind.config = {
       darkMode: 'class',
       theme: {
@@ -31,11 +45,10 @@
           }
         }
       }
-    }
+    };
   </script>
 
-  <style>
-    /* Custom styling & smooth transitions */
+  <style is:inline>
     * {
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
@@ -62,7 +75,6 @@
         box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
       }
     }
-    /* Custom thin scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -125,8 +137,16 @@
         </button>
       </div>
 
-      <!-- Controls: Theme Toggle -->
+      <!-- Controls: Theme Toggle & Back Link & Install -->
       <div class="flex items-center space-x-2">
+        <button id="pwaInstallToolBtn" onclick="triggerToolPwaInstall()" class="hidden items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition active:scale-95" title="Install WeekTrack as Standalone App">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span class="hidden sm:inline">Install</span>
+        </button>
+        <a href="/" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Back to Tools Directory">
+          <span>← All Tools</span>
+          <span class="font-mono text-[10px] text-slate-400">stp://</span>
+        </a>
         <button id="themeToggleBtn" onclick="toggleDarkMode()" class="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Toggle Dark/Light Mode">
           <svg id="themeIconSun" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/></svg>
           <svg id="themeIconMoon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
@@ -308,20 +328,18 @@
           </div>
         </div>
 
-      </section>
+      </aside>
 
     </div>
   </main>
 
-  <script>
-    // --- Application State ---
+  <script is:inline>
     const now = new Date();
-    let currentRealDate = new Date(); // The absolute real today
-    let viewDate = new Date(currentRealDate.getFullYear(), currentRealDate.getMonth(), 1); // Month viewed in calendar
-    let selectedDate = new Date(currentRealDate); // Currently highlighted date
-    let selectedWeekNum = null; // Currently highlighted week number
+    let currentRealDate = new Date();
+    let viewDate = new Date(currentRealDate.getFullYear(), currentRealDate.getMonth(), 1);
+    let selectedDate = new Date(currentRealDate);
+    let selectedWeekNum = null;
 
-    // Notes storage
     const STORAGE_KEY = 'weektrack_calendar_notes';
     let notesData = {};
     try {
@@ -330,12 +348,6 @@
       notesData = {};
     }
 
-    // --- ISO Week Number Helper Functions ---
-    /**
-     * ISO 8601 Week Number calculation
-     * ISO weeks start on Monday (day 1) and end on Sunday (day 7).
-     * Week 1 is the week with the first Thursday of the year.
-     */
     function getISOWeekNumber(date) {
       const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
       const dayNum = d.getUTCDay() || 7;
@@ -348,27 +360,18 @@
       };
     }
 
-    /**
-     * Total ISO weeks in a given year (usually 52, sometimes 53)
-     */
     function getISOWeeksInYear(year) {
-      const d = new Date(year, 11, 28); // Dec 28 is always in the last ISO week
+      const d = new Date(year, 11, 28);
       return getISOWeekNumber(d).weekNumber;
     }
 
-    /**
-     * Get the Monday (start) of the week for a given date
-     */
     function getWeekMonday(date) {
       const d = new Date(date);
       const day = d.getDay();
-      const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
       return new Date(d.setDate(diff));
     }
 
-    /**
-     * Formats date to 'YYYY-MM-DD' key for storage
-     */
     function formatDateKey(date) {
       const y = date.getFullYear();
       const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -376,16 +379,12 @@
       return `${y}-${m}-${d}`;
     }
 
-    /**
-     * Checks if two dates are the exact same calendar day
-     */
     function isSameDay(d1, d2) {
       return d1.getFullYear() === d2.getFullYear() &&
              d1.getMonth() === d2.getMonth() &&
              d1.getDate() === d2.getDate();
     }
 
-    // --- Live Clock & Hero Stats ---
     function updateLiveClock() {
       const realNow = new Date();
       currentRealDate = realNow;
@@ -404,7 +403,6 @@
       document.getElementById('liveClock').textContent = `${dateStr} • ${timeStr}`;
 
       const iso = getISOWeekNumber(realNow);
-      // Day of week: 1 (Mon) - 7 (Sun)
       const dayOfWeekIso = realNow.getDay() === 0 ? 7 : realNow.getDay();
       const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -412,31 +410,23 @@
       document.getElementById('currentDayHero').textContent = `${dayNames[dayOfWeekIso - 1]} (${dayOfWeekIso}/7)`;
     }
 
-    // --- Calendar Renderer ---
     function renderCalendar() {
       const year = viewDate.getFullYear();
       const month = viewDate.getMonth();
 
-      // Update Title
       const monthName = viewDate.toLocaleString(undefined, { month: 'long' });
       document.getElementById('calendarMonthYearTitle').textContent = `${monthName} ${year}`;
 
-      // Check if viewing current real month
       const isViewingCurrentMonth = (year === currentRealDate.getFullYear() && month === currentRealDate.getMonth());
       document.getElementById('calendarCurrentMonthTag').classList.toggle('hidden', !isViewingCurrentMonth);
 
       const calendarWeeksBody = document.getElementById('calendarWeeksBody');
       calendarWeeksBody.innerHTML = '';
 
-      // First day of month
       const firstDayOfMonth = new Date(year, month, 1);
-      // Last day of month
       const lastDayOfMonth = new Date(year, month + 1, 0);
 
-      // Find the Monday on or before the 1st of this month
       let startDate = getWeekMonday(firstDayOfMonth);
-
-      // Build rows week by week until after the end of month
       let currentPointer = new Date(startDate);
       const todayIso = getISOWeekNumber(currentRealDate);
 
@@ -446,16 +436,13 @@
         const isCurrentWeekRow = (weekIso.weekNumber === todayIso.weekNumber && weekIso.year === todayIso.year);
         const isSelectedWeekRow = (selectedWeekNum === weekIso.weekNumber);
 
-        // Styling the week container
         weekRow.className = `grid grid-cols-8 items-stretch transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/40 cursor-pointer ${
           isCurrentWeekRow ? 'current-week-row' : ''
         } ${isSelectedWeekRow && !isCurrentWeekRow ? 'bg-indigo-50/40 dark:bg-indigo-950/20' : ''}`;
 
-        // 1. Week Number Column (Col 1)
         const weekCol = document.createElement('div');
         weekCol.className = 'border-r border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center p-2 text-center select-none';
         
-        // Week badge
         const weekBadge = document.createElement('div');
         weekBadge.className = `flex flex-col items-center justify-center px-2 py-1.5 rounded-xl font-mono text-xs font-bold transition-all ${
           isCurrentWeekRow 
@@ -463,7 +450,6 @@
             : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-slate-700'
         }`;
         
-        // Calculate week day range for tooltip and copy (e.g. 1-7)
         const weekStartTemp = new Date(currentPointer);
         const weekEndTemp = new Date(currentPointer);
         weekEndTemp.setDate(weekEndTemp.getDate() + 6);
@@ -482,7 +468,6 @@
         weekCol.appendChild(weekBadge);
         weekRow.appendChild(weekCol);
 
-        // Capture starting date of this week row for week click
         const capturedWeekStart = new Date(currentPointer);
         const capturedWeekNum = weekIso.weekNumber;
         weekCol.addEventListener('click', (e) => {
@@ -490,7 +475,6 @@
           selectWeek(capturedWeekStart, capturedWeekNum);
         });
 
-        // 2. Day Columns (Cols 2 - 8)
         for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
           const dayCell = document.createElement('div');
           const dayDate = new Date(currentPointer);
@@ -506,11 +490,9 @@
             isSelected ? 'ring-2 ring-brand-500 bg-brand-50/50 dark:bg-brand-950/40 z-10 rounded-xl' : ''
           }`;
 
-          // Top line: Day Number + markers
           const topRow = document.createElement('div');
           topRow.className = 'flex items-center justify-between';
 
-          // Day Number Circle/Pill
           const dayPill = document.createElement('span');
           dayPill.className = `w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-xl text-xs sm:text-sm font-semibold transition ${
             isToday 
@@ -522,7 +504,6 @@
           dayPill.textContent = dayDate.getDate();
           topRow.appendChild(dayPill);
 
-          // Dot indicator if user added a note
           if (hasNote) {
             const noteDot = document.createElement('span');
             noteDot.title = 'Contains note';
@@ -532,7 +513,6 @@
 
           dayCell.appendChild(topRow);
 
-          // Bottom line: Preview of note or status text
           const bottomPreview = document.createElement('div');
           bottomPreview.className = 'mt-1 text-[10px] leading-tight truncate font-sans';
           if (hasNote) {
@@ -544,19 +524,15 @@
           }
           dayCell.appendChild(bottomPreview);
 
-          // Click handler for this day (stops bubbling to week row so day selection is isolated)
           dayCell.addEventListener('click', (e) => {
             e.stopPropagation();
             selectDate(dayDate);
           });
 
           weekRow.appendChild(dayCell);
-
-          // Advance currentPointer by 1 day
           currentPointer.setDate(currentPointer.getDate() + 1);
         }
 
-        // Entire row click to select and copy this week
         weekRow.addEventListener('click', () => {
           selectWeek(capturedWeekStart, capturedWeekNum);
         });
@@ -564,11 +540,9 @@
         calendarWeeksBody.appendChild(weekRow);
       }
 
-      // Update right sidebar for currently selected date and week
       updateSidebar();
     }
 
-    // --- Selection and Navigation Handlers ---
     function selectDate(date) {
       selectedDate = new Date(date);
       const iso = getISOWeekNumber(date);
@@ -578,10 +552,8 @@
 
     function selectWeek(weekStartDate, weekNum) {
       selectedWeekNum = weekNum;
-      // Default selected date to Monday of that week
       selectedDate = new Date(weekStartDate);
 
-      // Copy start and end week days to clipboard (e.g. 1-7)
       const weekStart = new Date(weekStartDate);
       const weekEnd = new Date(weekStartDate);
       weekEnd.setDate(weekEnd.getDate() + 6);
@@ -605,17 +577,14 @@
       renderCalendar();
     }
 
-    // --- Update Right Sidebar Info ---
     function updateSidebar() {
       const iso = getISOWeekNumber(selectedDate);
       const totalWeeks = getISOWeeksInYear(selectedDate.getFullYear());
 
-      // Week Tag and Display
       document.getElementById('sidebarWeekTag').textContent = `WEEK ${iso.weekNumber}`;
       document.getElementById('sidebarWeekNumDisplay').textContent = `W${String(iso.weekNumber).padStart(2, '0')}`;
       document.getElementById('sidebarYearNum').textContent = selectedDate.getFullYear();
 
-      // Calculate week start (Monday) and end (Sunday)
       const weekStart = getWeekMonday(selectedDate);
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
@@ -630,7 +599,6 @@
         copyRangePill.textContent = weekDaysRange;
       }
 
-      // Week progress (if viewing current week in real life, calculate elapsed days; else show 100% or 0%)
       const realTodayIso = getISOWeekNumber(currentRealDate);
       let weekPct = 0;
       if (iso.weekNumber === realTodayIso.weekNumber && selectedDate.getFullYear() === currentRealDate.getFullYear()) {
@@ -644,12 +612,10 @@
       document.getElementById('weekProgressPercent').textContent = `${weekPct}%`;
       document.getElementById('weekProgressBar').style.width = `${weekPct}%`;
 
-      // Year progress
       const yearPct = Math.min(100, Math.round((iso.weekNumber / totalWeeks) * 100));
       document.getElementById('yearProgressPercent').textContent = `${yearPct}%`;
       document.getElementById('yearProgressBar').style.width = `${yearPct}%`;
 
-      // Populate Week Days Grid buttons in Sidebar
       const weekDaysList = document.getElementById('sidebarWeekDaysList');
       weekDaysList.innerHTML = '';
       const dayNamesShort = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -678,7 +644,6 @@
         weekDaysList.appendChild(dayBtn);
       }
 
-      // Selected Day Details
       const fullDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       document.getElementById('sidebarSelectedDayName').textContent = fullDayNames[selectedDate.getDay()];
       document.getElementById('sidebarSelectedDateFormatted').textContent = selectedDate.toLocaleDateString(undefined, {
@@ -690,13 +655,11 @@
       const isToday = isSameDay(selectedDate, currentRealDate);
       document.getElementById('isTodayBadge').classList.toggle('hidden', !isToday);
 
-      // Load Note for this date
       const key = formatDateKey(selectedDate);
       document.getElementById('dayNoteInput').value = notesData[key] || '';
       document.getElementById('saveStatus').textContent = notesData[key] ? 'Saved note found' : 'No note for this day';
     }
 
-    // --- Note Saving Logic ---
     function saveCurrentNote() {
       const key = formatDateKey(selectedDate);
       const text = document.getElementById('dayNoteInput').value.trim();
@@ -723,38 +686,35 @@
       renderCalendar();
     }
 
-    // Auto-save note on input blur or keystroke debounce
     let noteDebounceTimer;
-    document.getElementById('dayNoteInput').addEventListener('input', () => {
+    document.getElementById('dayNoteInput')?.addEventListener('input', () => {
       document.getElementById('saveStatus').textContent = 'Saving...';
       clearTimeout(noteDebounceTimer);
       noteDebounceTimer = setTimeout(saveCurrentNote, 700);
     });
 
-    // --- Dark Mode Handler ---
     function initTheme() {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       const storedTheme = localStorage.getItem('weektrack_theme');
+      const isDark = storedTheme === 'light' ? false : true;
 
-      if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
+      if (isDark) {
         document.documentElement.classList.add('dark');
-        document.getElementById('themeIconSun').classList.remove('hidden');
-        document.getElementById('themeIconMoon').classList.add('hidden');
+        document.getElementById('themeIconSun')?.classList.remove('hidden');
+        document.getElementById('themeIconMoon')?.classList.add('hidden');
       } else {
         document.documentElement.classList.remove('dark');
-        document.getElementById('themeIconSun').classList.add('hidden');
-        document.getElementById('themeIconMoon').classList.remove('hidden');
+        document.getElementById('themeIconSun')?.classList.add('hidden');
+        document.getElementById('themeIconMoon')?.classList.remove('hidden');
       }
     }
 
     function toggleDarkMode() {
       const isDark = document.documentElement.classList.toggle('dark');
       localStorage.setItem('weektrack_theme', isDark ? 'dark' : 'light');
-      document.getElementById('themeIconSun').classList.toggle('hidden', !isDark);
-      document.getElementById('themeIconMoon').classList.toggle('hidden', isDark);
+      document.getElementById('themeIconSun')?.classList.toggle('hidden', !isDark);
+      document.getElementById('themeIconMoon')?.classList.toggle('hidden', isDark);
     }
 
-    // Keyboard navigation (Left/Right arrows for month)
     window.addEventListener('keydown', (e) => {
       if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') {
         return;
@@ -768,7 +728,6 @@
       }
     });
 
-    // --- Clipboard Copy & Toast Feedback ---
     function copyToClipboard(text) {
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(text).then(() => {
@@ -833,13 +792,39 @@
       copyToClipboard(range);
     }
 
-    // --- Bootstrapping on Load ---
     window.onload = function () {
       initTheme();
       updateLiveClock();
       setInterval(updateLiveClock, 1000);
       goToToday();
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+      }
     };
+
+    let toolInstallPrompt = null;
+    const pwaInstallToolBtn = document.getElementById('pwaInstallToolBtn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      toolInstallPrompt = e;
+      if (pwaInstallToolBtn) {
+        pwaInstallToolBtn.classList.remove('hidden');
+        pwaInstallToolBtn.classList.add('inline-flex');
+      }
+    });
+
+    function triggerToolPwaInstall() {
+      if (!toolInstallPrompt) return;
+      toolInstallPrompt.prompt();
+      toolInstallPrompt.userChoice.then((choice) => {
+        if (choice.outcome === 'accepted' && pwaInstallToolBtn) {
+          pwaInstallToolBtn.classList.add('hidden');
+          pwaInstallToolBtn.classList.remove('inline-flex');
+        }
+        toolInstallPrompt = null;
+      });
+    }
   </script>
 
   <!-- Copy Notification Toast -->

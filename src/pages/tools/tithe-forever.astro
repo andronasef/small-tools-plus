@@ -1,0 +1,224 @@
+---
+import { tools } from '../../data/tools';
+const tool = tools.find((t) => t.id === 'tithe-forever')!;
+---
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{tool.title}</title>
+    <link rel="icon" type="image/svg+xml" href={`/icons/${tool.iconFile}`}>
+    <!-- PWA & Mobile Web App Meta -->
+    <link rel="manifest" href={`/${tool.manifest}`}>
+    <meta name="theme-color" content={tool.accentColor}>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href={`/icons/${tool.iconFile.replace('.svg', '-192.png')}`}>
+
+    <link rel="stylesheet" href="/style.css">
+    <!-- Tailwind CSS -->
+    <script is:inline src="https://cdn.tailwindcss.com"></script>
+    <!-- خط عربي حديث وبسيط -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style is:inline>
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            background-color: #0a0a0c;
+            color: #f4f4f6;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-[#0a0a0c] text-zinc-100 flex flex-col items-center justify-center p-4 selection:bg-amber-500/30 relative">
+
+    <!-- شريط التحكم العلوي -->
+    <div class="absolute top-4 right-4 flex items-center gap-2">
+        <button id="pwaInstallToolBtn" onclick="triggerToolPwaInstall()" class="stp-install-btn" style="display:none;background:#d97706" title="تثبيت بادج العشور كتطبيق مستقل">
+            <span>تثبيت التطبيق 📲</span>
+        </button>
+        <a href="/" class="stp-nav-back" title="الرجوع للأدوات">
+            <span>← الأدوات</span>
+            <span class="stp-badge">stp://</span>
+        </a>
+    </div>
+
+    <!-- تاريخ البداية: شهر ٩ سنة ٢٠٢٦ والحد الأقصى ٩٠٪ -->
+    <div id="tithe-config" data-start-year="2026" data-start-month="9" data-min-percent="10" data-max-percent="90"></div>
+
+    <!-- كارت العشور فائق البساطة -->
+    <div class="bg-[#121216] border border-[#24242e] rounded-3xl p-8 w-full max-w-[280px] text-center shadow-2xl flex flex-col items-center justify-center gap-3">
+        
+        <!-- الشهر الحالي -->
+        <div id="current-month-badge" class="text-xs font-medium text-zinc-300 bg-[#18181f] border border-[#24242e] px-3.5 py-1 rounded-full">
+            جاري التحميل...
+        </div>
+
+        <!-- كلمة عشور -->
+        <span class="text-zinc-400 font-medium text-sm tracking-wide mt-1">
+            عشور
+        </span>
+
+        <!-- النسبة المئوية الحالية -->
+        <div class="flex items-baseline justify-center font-bold text-amber-400 tracking-tight leading-none">
+            <span id="percentage-number" class="text-6xl font-semibold">10</span>
+            <span class="text-2xl text-zinc-500 font-normal mr-1.5">%</span>
+        </div>
+
+        <!-- زر السجل (History) البسيط -->
+        <button id="open-history-btn" class="mt-3 text-xs font-medium text-zinc-300 hover:text-white border border-[#24242e] hover:border-zinc-600 bg-[#18181f] hover:bg-[#202028] px-4 py-1.5 rounded-full transition-colors flex items-center gap-1.5 focus:outline-none cursor-pointer">
+            <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            سجل الشهور
+        </button>
+    </div>
+
+    <!-- نافذة منبثقة للسجل بتصميم نظيف وهادئ -->
+    <div id="history-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#121216] border border-[#24242e] rounded-3xl max-w-sm w-full p-6 shadow-2xl relative text-zinc-100">
+            <!-- رأس النافذة -->
+            <div class="flex items-center justify-between pb-3 border-b border-[#24242e]">
+                <div>
+                    <h3 class="text-sm font-semibold text-zinc-100">سجل الشهور</h3>
+                    <p class="text-[11px] text-zinc-400">من ١٠٪ حتى ٩٠٪ بمعدل +١٪ شهرياً</p>
+                </div>
+                <button id="close-history-btn" class="text-zinc-400 hover:text-zinc-200 p-1.5 rounded-full hover:bg-zinc-800 transition-colors focus:outline-none cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- قائمة الشهور -->
+            <div id="history-list" class="mt-3 space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
+                <!-- يتم تعبئة الشهور تلقائياً عبر الجافاسكريبت -->
+            </div>
+        </div>
+    </div>
+
+    <script is:inline>
+        const ARABIC_MONTHS = [
+            "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+            "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+        ];
+
+        function getMonthName(monthNumber) {
+            return ARABIC_MONTHS[monthNumber - 1];
+        }
+
+        function updateTitheBadge() {
+            const configEl = document.getElementById('tithe-config');
+            const startYear = parseInt(configEl.getAttribute('data-start-year')) || 2026;
+            const startMonth = parseInt(configEl.getAttribute('data-start-month')) || 9;
+            const minPercent = parseInt(configEl.getAttribute('data-min-percent')) || 10;
+            const maxPercent = parseInt(configEl.getAttribute('data-max-percent')) || 90;
+
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth() + 1;
+
+            const currentMonthDisplay = document.getElementById('current-month-badge');
+            currentMonthDisplay.textContent = `${getMonthName(currentMonth)} ${currentYear}`;
+
+            const elapsedMonths = (currentYear - startYear) * 12 + (currentMonth - startMonth);
+            let percent = minPercent;
+            if (elapsedMonths > 0) {
+                percent = Math.min(maxPercent, minPercent + elapsedMonths);
+            }
+
+            document.getElementById('percentage-number').textContent = percent;
+
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+
+            const totalSteps = maxPercent - minPercent;
+
+            for (let i = 0; i <= totalSteps; i++) {
+                let targetMonthIndex = (startMonth - 1 + i);
+                let targetYear = startYear + Math.floor(targetMonthIndex / 12);
+                let targetMonth = (targetMonthIndex % 12) + 1;
+                let targetPercent = minPercent + i;
+
+                const isCurrent = (targetYear === currentYear && targetMonth === currentMonth);
+                const isPast = (targetYear < currentYear || (targetYear === currentYear && targetMonth < currentMonth));
+
+                const item = document.createElement('div');
+                item.className = `flex items-center justify-between p-2.5 rounded-xl text-xs transition-colors ${
+                    isCurrent 
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium shadow-sm current-item' 
+                        : isPast 
+                            ? 'text-zinc-500 bg-[#18181f]/40' 
+                            : 'text-zinc-300 bg-[#18181f] hover:bg-[#202028]'
+                }`;
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span>${getMonthName(targetMonth)} ${targetYear}</span>
+                        ${isCurrent ? '<span class="text-[10px] bg-amber-500/30 text-amber-200 px-2 py-0.5 rounded-full">الحالي</span>' : ''}
+                    </div>
+                    <span class="font-semibold ${isCurrent ? 'text-amber-400' : 'text-zinc-200'}">${targetPercent}%</span>
+                `;
+
+                historyList.appendChild(item);
+            }
+        }
+
+        const modal = document.getElementById('history-modal');
+        const openBtn = document.getElementById('open-history-btn');
+        const closeBtn = document.getElementById('close-history-btn');
+
+        openBtn.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                const currentEl = document.querySelector('.current-item');
+                if (currentEl) {
+                    currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 50);
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.classList.add('hidden');
+        });
+
+        window.addEventListener('DOMContentLoaded', updateTitheBadge);
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+            });
+        }
+
+        let toolInstallPrompt = null;
+        const pwaInstallToolBtn = document.getElementById('pwaInstallToolBtn');
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            toolInstallPrompt = e;
+            if (pwaInstallToolBtn) {
+                pwaInstallToolBtn.classList.remove('hidden');
+                pwaInstallToolBtn.classList.add('inline-flex');
+            }
+        });
+
+        function triggerToolPwaInstall() {
+            if (!toolInstallPrompt) return;
+            toolInstallPrompt.prompt();
+            toolInstallPrompt.userChoice.then((choice) => {
+                if (choice.outcome === 'accepted' && pwaInstallToolBtn) {
+                    pwaInstallToolBtn.classList.add('hidden');
+                    pwaInstallToolBtn.classList.remove('inline-flex');
+                }
+                toolInstallPrompt = null;
+            });
+        }
+    </script>
+</body>
+</html>

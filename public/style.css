@@ -1,0 +1,243 @@
+/*
+  Small Tools Plus — Unified Design System & Dark Theme Tokens
+  Domain: small.andronasef.com
+*/
+
+:root {
+  /* Canvas & Surface Colors */
+  --stp-canvas: #0a0a0c;
+  --stp-surface: #121216;
+  --stp-surface-elevated: #18181f;
+  --stp-surface-hover: #22222b;
+  --stp-surface-active: #2a2a36;
+
+  /* Borders & Dividers */
+  --stp-border-subtle: #24242e;
+  --stp-border-default: #2e2e3a;
+  --stp-border-strong: #3f3f50;
+  --stp-border-focus: #3b82f6;
+
+  /* Text & Content */
+  --stp-text-primary: #f4f4f6;
+  --stp-text-secondary: #a1a1aa;
+  --stp-text-muted: #71717a;
+  --stp-text-disabled: #52525b;
+
+  /* Accent Colors */
+  --stp-accent-blue: #3b82f6;
+  --stp-accent-indigo: #6366f1;
+  --stp-accent-emerald: #10b981;
+  --stp-accent-amber: #f59e0b;
+  --stp-accent-rose: #f43f5e;
+  --stp-accent-cyan: #06b6d4;
+
+  /* Focus & Shadow */
+  --stp-focus-ring: 0 0 0 2px rgba(59, 130, 246, 0.4);
+  --stp-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --stp-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --stp-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+
+  /* Typography */
+  --stp-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --stp-font-arabic: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, sans-serif;
+  --stp-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Force Dark Mode Baseline */
+html {
+  color-scheme: dark;
+  background-color: var(--stp-canvas);
+  color: var(--stp-text-primary);
+}
+
+body {
+  background-color: var(--stp-canvas);
+  color: var(--stp-text-primary);
+  font-family: var(--stp-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Unified Selection */
+::selection {
+  background-color: var(--stp-accent-blue);
+  color: #ffffff;
+}
+
+/* Unified Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--stp-border-default);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--stp-border-strong);
+}
+
+/* Common Back-to-Tools Link (.stp-nav-back) */
+.stp-nav-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--stp-text-secondary);
+  background-color: var(--stp-surface);
+  border: 1px solid var(--stp-border-subtle);
+  border-radius: 9999px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.stp-nav-back:hover {
+  color: var(--stp-text-primary);
+  background-color: var(--stp-surface-hover);
+  border-color: var(--stp-border-default);
+}
+.stp-nav-back .stp-badge {
+  font-family: var(--stp-font-mono);
+  font-size: 10px;
+  color: var(--stp-text-muted);
+}
+
+/* Unified Install Button (.stp-install-btn) */
+.stp-install-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: var(--stp-accent-blue);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  cursor: pointer;
+  box-shadow: var(--stp-shadow-sm);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.stp-install-btn:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+.stp-install-btn:active {
+  transform: translateY(0);
+}
+
+/* Common Card & Surface utility */
+.stp-card {
+  background-color: var(--stp-surface);
+  border: 1px solid var(--stp-border-subtle);
+  border-radius: 16px;
+  box-shadow: var(--stp-shadow-sm);
+}
+
+/* Scoped Dark Overrides for StoreLocalizer & pre-compiled modules */
+html.dark .bg-\[\#f8fafc\],
+body.dark .bg-\[\#f8fafc\] {
+  background-color: var(--stp-canvas) !important;
+  color: var(--stp-text-primary) !important;
+}
+
+html.dark .bg-white,
+body.dark .bg-white {
+  background-color: var(--stp-surface) !important;
+}
+
+html.dark .bg-slate-50,
+body.dark .bg-slate-50,
+html.dark .bg-slate-50\/50,
+body.dark .bg-slate-50\/50 {
+  background-color: var(--stp-surface-elevated) !important;
+}
+
+html.dark .bg-slate-100,
+body.dark .bg-slate-100 {
+  background-color: var(--stp-surface-hover) !important;
+}
+
+html.dark .bg-slate-200,
+body.dark .bg-slate-200 {
+  background-color: var(--stp-surface-active) !important;
+}
+
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-300,
+body.dark .border-slate-100,
+body.dark .border-slate-200,
+body.dark .border-slate-300 {
+  border-color: var(--stp-border-subtle) !important;
+}
+
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
+body.dark .text-slate-900,
+body.dark .text-slate-800,
+body.dark .text-slate-700 {
+  color: var(--stp-text-primary) !important;
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500,
+body.dark .text-slate-600,
+body.dark .text-slate-500 {
+  color: var(--stp-text-secondary) !important;
+}
+
+html.dark .text-slate-400,
+body.dark .text-slate-400 {
+  color: var(--stp-text-muted) !important;
+}
+
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: var(--stp-surface-elevated) !important;
+  color: var(--stp-text-primary) !important;
+  border-color: var(--stp-border-default) !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: var(--stp-text-disabled) !important;
+}
+
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-100:hover {
+  background-color: var(--stp-surface-hover) !important;
+}
+
+html.dark .hover\:bg-slate-200:hover {
+  background-color: var(--stp-surface-active) !important;
+}
+
+html.dark .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+
+html.dark .border-blue-100,
+html.dark .border-blue-400 {
+  border-color: var(--stp-accent-blue) !important;
+}
+
+html.dark .text-blue-700,
+html.dark .text-blue-800 {
+  color: #93c5fd !important;
+}
+
+html.dark .bg-blue-100 {
+  background-color: rgba(59, 130, 246, 0.25) !important;
+  color: #bfdbfe !important;
+}

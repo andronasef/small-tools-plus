@@ -1,0 +1,158 @@
+---
+import { tools } from '../../data/tools';
+const tool = tools.find((t) => t.id === 'notion-helper')!;
+---
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{tool.title}</title>
+    <link rel="icon" type="image/svg+xml" href={`/icons/${tool.iconFile}`}>
+    <!-- PWA & Mobile Web App Meta -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content={tool.accentColor}>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href={`/icons/${tool.iconFile}`}>
+
+    <link rel="stylesheet" href="/style.css">
+    <script is:inline src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style is:inline>
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+            background-color: #0a0a0c;
+            color: #f4f4f6;
+        }
+        .btn-notion {
+            background-color: #2563eb;
+            transition: all 0.2s ease;
+        }
+        .btn-notion:hover {
+            background-color: #1d4ed8;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen">
+    <div class="max-w-3xl mx-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-3">
+                <div class="bg-[#18181f] text-white p-2.5 rounded-xl text-2xl border border-[#24242e] shadow-sm">📝</div>
+                <div>
+                    <h1 class="text-2xl font-bold text-zinc-100">مصلح نصوص نوشن (Notion)</h1>
+                    <p class="text-sm text-zinc-400">نظف النص وخليه جاهز للصق كـ Blocks مرتبة</p>
+                </div>
+            </div>
+            <a href="/" class="stp-nav-back" title="الرجوع للأدوات">
+                <span>← الأدوات</span>
+                <span class="stp-badge">stp://</span>
+            </a>
+        </div>
+
+        <!-- Input Area -->
+        <div class="bg-[#121216] rounded-2xl border border-[#24242e] overflow-hidden mb-6 shadow-sm">
+            <div class="px-4 py-2.5 bg-[#18181f] border-b border-[#24242e] flex justify-between items-center">
+                <span class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">النص الأصلي</span>
+                <button onclick="clearInput()" class="text-xs text-rose-400 hover:text-rose-300 cursor-pointer transition">مسح الكل</button>
+            </div>
+            <textarea id="inputText" 
+                class="w-full h-48 p-4 bg-transparent focus:outline-none resize-none text-zinc-100 placeholder-zinc-500 leading-relaxed font-sans" 
+                placeholder="إرمي النص اللي بيبوظ هنا..."></textarea>
+        </div>
+
+        <!-- Action Button -->
+        <div class="flex justify-center mb-6">
+            <button onclick="cleanText()" 
+                class="btn-notion text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-blue-600/20 flex items-center gap-2 transform active:scale-95 cursor-pointer">
+                <span>تجهيز النص لـ نوشن</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M11.3 1.047a1 1 0 01.897.447l4.103 6.155A1 1 0 0115.467 9.143H13v7a1 1 0 01-1 1H8a1 1 0 01-1-1V9.143H4.533a1 1 0 01-.834-1.549l4.103-6.155a1 1 0 01.897-.447h1.6z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Output Area -->
+        <div id="outputContainer" class="hidden bg-[#121216] rounded-2xl border border-[#24242e] overflow-hidden mb-6 shadow-sm">
+            <div class="px-4 py-2.5 bg-emerald-950/40 border-b border-emerald-800/40 flex justify-between items-center">
+                <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">النص الجاهز</span>
+                <span id="copyStatus" class="text-xs text-emerald-400 font-medium"></span>
+            </div>
+            <div id="outputText" class="w-full min-h-[100px] p-4 text-zinc-200 whitespace-pre-wrap break-words leading-relaxed font-sans"></div>
+            <div class="p-4 bg-[#18181f] border-t border-[#24242e]">
+                <button onclick="copyToClipboard()" 
+                    class="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-2.5 rounded-xl font-medium border border-zinc-700 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    نسخ النص المعدل
+                </button>
+            </div>
+        </div>
+
+        <!-- Tips -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-blue-950/30 p-4 rounded-xl border border-blue-900/40">
+                <h3 class="text-blue-300 font-bold text-sm mb-1">ليه النص كان بيبوظ؟</h3>
+                <p class="text-blue-200/70 text-xs leading-relaxed">بسبب وجود مسافات خفية (Zero Width Spaces) أو تنسيقات HTML بتجبر نوشن يفتح Blocks جديدة لكل سطر بشكل عشوائي.</p>
+            </div>
+            <div class="bg-amber-950/30 p-4 rounded-xl border border-amber-900/40">
+                <h3 class="text-amber-300 font-bold text-sm mb-1">نصيحة ذكية</h3>
+                <p class="text-amber-200/70 text-xs leading-relaxed">لو بتنقل قوائم، الأداة دي هتحطلك "-" في بداية السطر عشان نوشن يحولها Bullet List تلقائياً أول ما تعمل لصق.</p>
+            </div>
+        </div>
+    </div>
+
+    <script is:inline>
+        function cleanText() {
+            const input = document.getElementById('inputText').value;
+            if (!input.trim()) return;
+
+            let cleaned = input.replace(/[\u200B-\u200D\uFEFF]/g, '');
+            cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+            cleaned = cleaned.split('\n').map(line => line.trim()).join('\n');
+            cleaned = cleaned.replace(/^[•●○◘■]\s*/gm, '- ');
+
+            const outputDiv = document.getElementById('outputText');
+            const container = document.getElementById('outputContainer');
+            
+            outputDiv.textContent = cleaned;
+            container.classList.remove('hidden');
+            container.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('outputText').textContent;
+            const status = document.getElementById('copyStatus');
+            
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                status.textContent = '✅ تم النسخ بنجاح!';
+                setTimeout(() => { status.textContent = ''; }, 3000);
+            } catch (err) {
+                status.textContent = '❌ فشل النسخ';
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function clearInput() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('outputContainer').classList.add('hidden');
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
