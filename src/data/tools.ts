@@ -129,6 +129,24 @@ export const tools: Tool[] = [
     dir: 'rtl',
     mobile: true,
     manifest: 'manifest-tithe.webmanifest'
+  },
+  {
+    id: 'sleep-calculator',
+    number: '07',
+    title: 'Sleep Cycle Calculator',
+    shortTitle: 'Sleep',
+    file: 'tools/sleep-calculator.html',
+    filename: 'sleep-calculator.html',
+    category: 'Wellbeing',
+    badge: '90-Min Cycles',
+    description: 'Optimal bedtime and wake-up calculator based on 90-minute natural sleep cycles',
+    keywords: 'sleep calculator cycles wake up bed time nap rest circadian health نوم استيقاظ دورات النوم',
+    icon: 'moon',
+    iconFile: 'tool-sleep.svg',
+    accentColor: '#6366f1',
+    bgGradientEnd: '#4f46e5',
+    mobile: true,
+    manifest: 'manifest-sleep.webmanifest'
   }
 ];
 

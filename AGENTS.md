@@ -42,6 +42,7 @@ small-tools-plus/
 │           ├── feelings-wheel-ar.astro
 │           ├── interactive_week_month_calendar.astro
 │           ├── notion-copy-helper.astro
+│           ├── sleep-calculator.astro
 │           ├── store-localizer.astro
 │           └── tithe-forever.astro
 └── dist/                         # Compiled static output deployed to GitHub Pages
@@ -80,6 +81,7 @@ small-tools-plus/
   2. عجلة المشاعر العربية (`feelings-wheel-ar`)
   3. DevFit Workout Guide (`daily-workout`)
   4. Tithe Forever (`tithe-forever`)
+  5. Sleep Cycle Calculator (`sleep-calculator`)
 
 ---
 
