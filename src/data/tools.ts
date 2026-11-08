@@ -156,6 +156,26 @@ export const tools: Tool[] = [
     mobile: true,
     manifest: "manifest-sleep.webmanifest",
   },
+  {
+    id: "task-organizer",
+    number: "08",
+    title: "Task Triage Organizer",
+    shortTitle: "Triage",
+    file: "tools/task-organizer.html",
+    filename: "task-organizer.html",
+    category: "Productivity",
+    badge: "Dynamic Zones",
+    description:
+      "Visual mini-task triage board with quick backlog capture and 3 dynamic priority zones",
+    keywords:
+      "task organizer todo priority triage backlog kanban drag drop productivity mini tasks",
+    icon: "kanban",
+    iconFile: "tool-organizer.svg",
+    accentColor: "#8b5cf6",
+    bgGradientEnd: "#6d28d9",
+    mobile: true,
+    manifest: "manifest-organizer.webmanifest",
+  },
 ];
 
 export const categories = [

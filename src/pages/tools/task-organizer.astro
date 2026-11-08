@@ -1,0 +1,1523 @@
+---
+import { tools } from '../../data/tools';
+const tool = tools.find((t) => t.id === 'task-organizer')!;
+---
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{tool.title}</title>
+  <link rel="icon" type="image/svg+xml" href={`/icons/${tool.iconFile}`}>
+  <!-- PWA & Mobile Web App Meta -->
+  <link rel="manifest" href={`/${tool.manifest}`}>
+  <meta name="theme-color" content={tool.accentColor}>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href={`/icons/${tool.iconFile.replace('.svg', '-192.png')}`}>
+
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/tailwind.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <style is:inline>
+    :root {
+      --color-red-zone: #ef4444;
+      --color-green-zone: #10b981;
+      --color-yellow-zone: #f59e0b;
+    }
+
+    body {
+      background-color: #09090c;
+      color: #f4f4f6;
+      font-family: 'Inter', 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Arabic typography & Bidirectional text support */
+    .task-text,
+    input,
+    textarea,
+    .zone-title,
+    .ctx-item {
+      font-family: 'Inter', 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .task-text,
+    #taskInput,
+    #bulkInput,
+    .inline-edit-input {
+      unicode-bidi: plaintext;
+      text-align: start;
+    }
+
+    [dir="rtl"],
+    :lang(ar),
+    .is-rtl {
+      font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, sans-serif;
+      letter-spacing: 0 !important;
+    }
+
+    /* Custom Scrollbar */
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Zone container dynamic transitions */
+    .zone-box {
+      transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, flex-grow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Red Zone - Top */
+    .zone-red {
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.07) 0%, rgba(20, 10, 14, 0.6) 100%);
+      border: 1px solid rgba(239, 68, 68, 0.22);
+    }
+    .zone-red.drag-over {
+      border-color: #ef4444;
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.16) 0%, rgba(239, 68, 68, 0.08) 100%);
+      box-shadow: 0 0 24px -2px rgba(239, 68, 68, 0.35);
+    }
+
+    /* Green Zone - Middle */
+    .zone-green {
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.07) 0%, rgba(10, 20, 16, 0.6) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.22);
+    }
+    .zone-green.drag-over {
+      border-color: #10b981;
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.16) 0%, rgba(16, 185, 129, 0.08) 100%);
+      box-shadow: 0 0 24px -2px rgba(16, 185, 129, 0.35);
+    }
+
+    /* Yellow Zone - Bottom */
+    .zone-yellow {
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.07) 0%, rgba(22, 18, 10, 0.6) 100%);
+      border: 1px solid rgba(245, 158, 11, 0.22);
+    }
+    .zone-yellow.drag-over {
+      border-color: #f59e0b;
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.16) 0%, rgba(245, 158, 11, 0.08) 100%);
+      box-shadow: 0 0 24px -2px rgba(245, 158, 11, 0.35);
+    }
+
+    /* Backlog drop zone */
+    .zone-backlog.drag-over {
+      border-color: #8b5cf6;
+      background-color: rgba(139, 92, 246, 0.08);
+      box-shadow: 0 0 24px -2px rgba(139, 92, 246, 0.3);
+    }
+
+    /* Task Card Styles - Auto-sizing Chip / Pinterest Style */
+    .task-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      width: auto;
+      max-width: 100%;
+      background-color: #14141c;
+      border: 1px solid #28283a;
+      border-radius: 12px;
+      padding: 6px 11px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: pan-y;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+      flex: 0 1 auto;
+    }
+    .task-card:hover {
+      border-color: #4a4a66;
+      background-color: #191926;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+    }
+    .task-card:active {
+      cursor: grabbing;
+    }
+    .task-card.is-dragging {
+      opacity: 0.35;
+      transform: scale(0.96);
+      border: 1px dashed #8b5cf6;
+      box-shadow: none;
+    }
+
+    /* Drop preview indicator line */
+    .drop-indicator {
+      height: 3px;
+      background: #8b5cf6;
+      border-radius: 9999px;
+      margin: 4px 0;
+      box-shadow: 0 0 8px #8b5cf6;
+      pointer-events: none;
+    }
+
+    /* Context Menu */
+    #contextMenu {
+      display: none;
+      position: fixed;
+      z-index: 100;
+      background-color: #171720;
+      border: 1px solid #2d2d3e;
+      border-radius: 12px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      min-width: 200px;
+      padding: 6px;
+      animation: menuFadeIn 0.12s ease-out;
+    }
+    @keyframes menuFadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .ctx-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      width: 100%;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #e2e2e8;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+      transition: background-color 0.1s ease, color 0.1s ease;
+    }
+    .ctx-item:hover {
+      background-color: #262635;
+      color: #ffffff;
+    }
+    .ctx-item.danger:hover {
+      background-color: rgba(239, 68, 68, 0.18);
+      color: #fca5a5;
+    }
+    .ctx-separator {
+      height: 1px;
+      background-color: #272738;
+      margin: 4px 6px;
+    }
+
+    /* Mobile Bottom-Sheet Action Drawer */
+    @media (max-width: 640px) {
+      #contextMenu {
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        top: auto !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        border-radius: 20px 20px 0 0 !important;
+        padding: 16px 14px 28px 14px !important;
+        box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.85) !important;
+        border-bottom: none !important;
+        border-left: none !important;
+        border-right: none !important;
+        animation: menuSlideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      }
+      @keyframes menuSlideUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+      }
+      .ctx-item {
+        padding: 12px 14px !important;
+        font-size: 15px !important;
+        border-radius: 10px !important;
+      }
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 90;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    #toast.show {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen lg:h-screen lg:overflow-hidden selection:bg-purple-500/30 selection:text-white">
+
+  <!-- Top Navigation Header -->
+  <header class="border-b border-zinc-800/80 bg-[#09090c]/90 backdrop-blur-md sticky top-0 z-30">
+    <div class="max-w-[1700px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+      
+      <!-- Brand & Tool Title -->
+      <div class="flex items-center gap-3">
+        <a href="/" class="flex items-center gap-2.5 text-inherit no-underline group">
+          <img src={`/icons/${tool.iconFile}`} width="26" height="26" class="w-6.5 h-6.5 rounded-lg group-hover:scale-105 transition" alt="" />
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-sm tracking-tight text-white">{tool.title}</span>
+            <span class="hidden md:inline-flex text-[11px] font-mono px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">
+              Interactive Triage
+            </span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Quick Action Controls (Icon Buttons Only) -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <!-- Copy Markdown Summary (Icon button) -->
+        <button 
+          id="copyMarkdownBtn" 
+          onclick="copyBoardAsMarkdown()" 
+          class="w-9 h-9 rounded-xl bg-[#14141d] hover:bg-[#1f1f2c] active:scale-95 text-zinc-300 hover:text-white border border-[#2b2b3c] transition flex items-center justify-center group" 
+          title="Copy board as Markdown"
+          aria-label="Copy Markdown"
+        >
+          <svg class="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+          </svg>
+        </button>
+
+        <!-- Paste / Import Markdown (Icon button) -->
+        <button 
+          id="pasteMarkdownBtn" 
+          onclick="openPasteMarkdownModal()" 
+          class="w-9 h-9 rounded-xl bg-[#14141d] hover:bg-[#1f1f2c] active:scale-95 text-zinc-300 hover:text-white border border-[#2b2b3c] transition flex items-center justify-center group" 
+          title="Paste / Import Markdown"
+          aria-label="Paste Markdown"
+        >
+          <svg class="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+        </button>
+
+        <!-- Clear Board (Icon button) -->
+        <button 
+          id="clearBoardBtn" 
+          onclick="confirmClearBoard()" 
+          class="w-9 h-9 rounded-xl bg-[#14141d] hover:bg-rose-950/40 active:scale-95 text-zinc-400 hover:text-rose-300 border border-[#2b2b3c] hover:border-rose-900/50 transition flex items-center justify-center group" 
+          title="Clear board"
+          aria-label="Clear board"
+        >
+          <svg class="w-4 h-4 text-zinc-400 group-hover:text-rose-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+
+        <!-- Standalone PWA Install (Icon button) -->
+        <button 
+          id="pwaInstallToolBtn" 
+          onclick="triggerToolPwaInstall()" 
+          class="w-9 h-9 rounded-xl bg-purple-600 hover:bg-purple-500 active:scale-95 text-white transition items-center justify-center shadow-md shadow-purple-900/30" 
+          style="display:none;" 
+          title="Install Organizer App 📲"
+          aria-label="Install App"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+        </button>
+
+        <div class="h-5 w-px bg-zinc-800 mx-0.5"></div>
+
+        <!-- Back to Tools Directory -->
+        <a href="/" class="stp-nav-back" title="Back to Tools Directory">
+          <span class="hidden sm:inline">← All Tools</span>
+          <span class="sm:hidden">←</span>
+          <span class="stp-badge hidden md:inline">stp://</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Workspace Container (Equal 50/50 Split Screen Layout with Desktop No-Scroll Fit) -->
+  <main class="flex-1 max-w-[1700px] w-full mx-auto p-3 sm:p-4.5 flex flex-col lg:flex-row gap-3.5 sm:gap-4 items-stretch lg:h-[calc(100vh-3.5rem)] lg:max-h-[calc(100vh-3.5rem)]">
+
+    <!-- Mobile Segmented View Switcher (Visible on mobile screens only < lg) -->
+    <div class="lg:hidden flex items-center p-1 bg-[#13131c] border border-[#232332] rounded-xl gap-1 w-full mb-1">
+      <button 
+        id="mobileTabBacklog" 
+        type="button" 
+        onclick="switchMobileTab('backlog')" 
+        class="flex-1 py-2 text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5 bg-purple-600 text-white shadow-sm"
+      >
+        <span>📋 Backlog</span>
+        <span id="mobileTabBacklogCount" class="px-1.5 py-0.5 rounded-full text-[10px] bg-white/20">0</span>
+      </button>
+      <button 
+        id="mobileTabZones" 
+        type="button" 
+        onclick="switchMobileTab('zones')" 
+        class="flex-1 py-2 text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5 text-zinc-400 hover:text-white"
+      >
+        <span>🎯 Priority Zones</span>
+        <span id="mobileTabZonesCount" class="px-1.5 py-0.5 rounded-full text-[10px] bg-zinc-800 text-zinc-300">0</span>
+      </button>
+    </div>
+
+    <!-- LEFT COLUMN: Backlog / Quick Capture (Exact 50% on desktop) -->
+    <section id="colBacklog" class="w-full lg:w-1/2 flex-1 flex flex-col bg-[#111117] border border-[#222230] rounded-2xl p-3.5 sm:p-4 shadow-xl lg:h-full lg:overflow-hidden">
+      
+      <!-- Backlog Header -->
+      <div class="flex items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-[#232332]">
+        <div class="flex items-center gap-2">
+          <div class="w-6.5 h-6.5 rounded-lg bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-purple-400">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+              Backlog
+              <span id="backlogCount" class="text-[11px] font-mono px-2 py-0.2 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">0</span>
+            </h2>
+          </div>
+        </div>
+
+        <!-- Quick actions helper -->
+        <button onclick="openBulkAddModal()" class="text-[11px] font-medium text-purple-400 hover:text-purple-300 hover:underline flex items-center gap-1" title="Paste multiple lines at once">
+          <span>+ Bulk Paste</span>
+        </button>
+      </div>
+
+      <!-- Add Task Input Form -->
+      <form id="addTaskForm" onsubmit="handleAddTask(event)" class="relative mb-3 flex items-center gap-2">
+        <input 
+          id="taskInput" 
+          type="text" 
+          dir="auto"
+          placeholder="Type mini-task & press Enter..." 
+          class="w-full px-3 py-2 text-xs sm:text-sm rounded-xl bg-[#171722] border border-[#2a2a3c] text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/50 transition pr-20"
+          autocomplete="off"
+        />
+        <button 
+          type="submit" 
+          class="absolute right-1 top-1 bottom-1 px-3 rounded-lg bg-purple-600 hover:bg-purple-500 active:scale-95 text-white font-medium text-xs flex items-center gap-1 transition"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          <span>Add</span>
+        </button>
+      </form>
+
+      <!-- Backlog Drop Zone & Task List (Pinterest Wrap) -->
+      <div 
+        id="zone-backlog" 
+        data-zone="backlog"
+        class="zone-box zone-backlog flex-1 overflow-y-auto custom-scroll rounded-xl p-2.5 border border-dashed border-[#262638] bg-[#0c0c11]/50 flex flex-wrap gap-2 content-start items-start min-h-[160px]"
+      >
+        <!-- Tasks rendered dynamically -->
+      </div>
+
+      <!-- Helper tip footer -->
+      <div class="mt-2.5 pt-2.5 border-t border-[#1f1f2d] flex items-center justify-between text-[11px] text-zinc-500">
+        <span class="flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Drag items to prioritize →
+        </span>
+        <span class="hidden sm:inline">Double-click to edit</span>
+      </div>
+
+    </section>
+
+    <!-- RIGHT COLUMN: 3 Dynamic Priority Zones (Red, Green, Yellow) (Exact 50% on desktop) -->
+    <section id="colZones" class="w-full lg:w-1/2 flex-1 hidden lg:flex flex-col gap-3 justify-between lg:h-full lg:overflow-hidden">
+
+      <!-- TOP ZONE: 🔴 RED (Urgent / High Focus) -->
+      <div 
+        id="box-red" 
+        class="zone-box zone-red rounded-xl p-3 sm:p-3.5 flex flex-col shadow-md lg:overflow-hidden"
+        style="flex: 1 1 0%; min-height: 80px;"
+      >
+        <!-- Red Zone Header -->
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50 flex-shrink-0 animate-pulse"></span>
+            <h3 
+              id="title-red" 
+              onclick="inlineEditZoneTitle('red')" 
+              class="text-xs sm:text-sm font-bold text-white tracking-tight cursor-pointer hover:text-rose-200 transition flex items-center gap-1.5 group"
+              title="Click to rename"
+            >
+              <span id="label-red" dir="auto">Urgent & High Focus</span>
+              <svg class="w-3 h-3 text-zinc-500 opacity-0 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            </h3>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span id="count-red" class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30">
+              0 tasks
+            </span>
+          </div>
+        </div>
+
+        <!-- Red Drop Zone (Pinterest Wrap) -->
+        <div 
+          id="zone-red" 
+          data-zone="red"
+          class="flex-1 rounded-lg p-1.5 flex flex-wrap gap-2 content-start items-start min-h-[44px] transition-all custom-scroll overflow-y-auto"
+        >
+          <!-- Tasks rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- MIDDLE ZONE: 🟢 GREEN (In Flow / Normal) -->
+      <div 
+        id="box-green" 
+        class="zone-box zone-green rounded-xl p-3 sm:p-3.5 flex flex-col shadow-md lg:overflow-hidden"
+        style="flex: 1 1 0%; min-height: 80px;"
+      >
+        <!-- Green Zone Header -->
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50 flex-shrink-0"></span>
+            <h3 
+              id="title-green" 
+              onclick="inlineEditZoneTitle('green')" 
+              class="text-xs sm:text-sm font-bold text-white tracking-tight cursor-pointer hover:text-emerald-200 transition flex items-center gap-1.5 group"
+              title="Click to rename"
+            >
+              <span id="label-green" dir="auto">In Flow & Normal</span>
+              <svg class="w-3 h-3 text-zinc-500 opacity-0 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            </h3>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span id="count-green" class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+              0 tasks
+            </span>
+          </div>
+        </div>
+
+        <!-- Green Drop Zone (Pinterest Wrap) -->
+        <div 
+          id="zone-green" 
+          data-zone="green"
+          class="flex-1 rounded-lg p-1.5 flex flex-wrap gap-2 content-start items-start min-h-[44px] transition-all custom-scroll overflow-y-auto"
+        >
+          <!-- Tasks rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- BOTTOM ZONE: 🟡 YELLOW (Low Priority / Later) -->
+      <div 
+        id="box-yellow" 
+        class="zone-box zone-yellow rounded-xl p-3 sm:p-3.5 flex flex-col shadow-md lg:overflow-hidden"
+        style="flex: 1 1 0%; min-height: 80px;"
+      >
+        <!-- Yellow Zone Header -->
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50 flex-shrink-0"></span>
+            <h3 
+              id="title-yellow" 
+              onclick="inlineEditZoneTitle('yellow')" 
+              class="text-xs sm:text-sm font-bold text-white tracking-tight cursor-pointer hover:text-amber-200 transition flex items-center gap-1.5 group"
+              title="Click to rename"
+            >
+              <span id="label-yellow" dir="auto">Later & Low Priority</span>
+              <svg class="w-3 h-3 text-zinc-500 opacity-0 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            </h3>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span id="count-yellow" class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              0 tasks
+            </span>
+          </div>
+        </div>
+
+        <!-- Yellow Drop Zone (Pinterest Wrap) -->
+        <div 
+          id="zone-yellow" 
+          data-zone="yellow"
+          class="flex-1 rounded-lg p-1.5 flex flex-wrap gap-2 content-start items-start min-h-[44px] transition-all custom-scroll overflow-y-auto"
+        >
+          <!-- Tasks rendered dynamically -->
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Context Menu Backdrop (for mobile bottom sheet dismissal) -->
+  <div id="contextMenuBackdrop" onclick="closeContextMenu()" class="fixed inset-0 z-40 bg-black/60 hidden transition-opacity"></div>
+
+  <!-- Right-Click / Touch Context Menu -->
+  <div id="contextMenu">
+    <div id="ctxTaskPreview" dir="auto" class="px-2.5 py-1 text-[11px] font-mono text-zinc-400 truncate max-w-[220px] border-b border-zinc-800 mb-1">
+      Task Options
+    </div>
+    <button class="ctx-item" onclick="handleCtxEdit()">
+      <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+      <span>Edit text (2x click)</span>
+    </button>
+    <div class="ctx-separator"></div>
+    <button class="ctx-item" onclick="handleCtxMove('red')">
+      <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+      <span>Move to Red (Urgent)</span>
+    </button>
+    <button class="ctx-item" onclick="handleCtxMove('green')">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+      <span>Move to Green (Normal)</span>
+    </button>
+    <button class="ctx-item" onclick="handleCtxMove('yellow')">
+      <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+      <span>Move to Yellow (Later)</span>
+    </button>
+    <button class="ctx-item" onclick="handleCtxMove('backlog')">
+      <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+      <span>Move to Backlog</span>
+    </button>
+    <div class="ctx-separator"></div>
+    <button class="ctx-item danger" onclick="handleCtxDelete()">
+      <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+      <span>Delete Task</span>
+    </button>
+  </div>
+
+  <!-- Paste Markdown Modal -->
+  <div id="pasteMarkdownModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-[#14141e] border border-zinc-700 rounded-2xl max-w-lg w-full p-5 shadow-2xl animate-in flex flex-col gap-3.5">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <span>📥 Paste / Import Markdown</span>
+        </h3>
+        <button onclick="closePasteMarkdownModal()" class="text-zinc-400 hover:text-white text-xl leading-none">&times;</button>
+      </div>
+
+      <p class="text-xs text-zinc-400 leading-relaxed">
+        Paste a markdown checklist from another browser or window. Supports headers (<code class="text-rose-400">🔴 Urgent</code>, <code class="text-emerald-400">🟢 Normal</code>, <code class="text-amber-400">🟡 Later</code>, <code class="text-purple-400">📋 Backlog</code>) or standard checklists (<code class="text-zinc-300">- [ ] task</code>).
+      </p>
+
+      <div class="flex items-center justify-between gap-2">
+        <button 
+          type="button" 
+          onclick="handleClipboardPasteClick()" 
+          class="text-xs px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-750 text-zinc-200 border border-zinc-750 flex items-center gap-1.5 transition active:scale-95"
+        >
+          <svg class="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <span>📋 Paste Clipboard</span>
+        </button>
+
+        <div class="flex items-center gap-3 text-xs text-zinc-300">
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <input type="radio" name="importMode" value="merge" checked class="text-purple-600 focus:ring-0">
+            <span>Merge</span>
+          </label>
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <input type="radio" name="importMode" value="replace" class="text-purple-600 focus:ring-0">
+            <span>Replace all</span>
+          </label>
+        </div>
+      </div>
+
+      <textarea 
+        id="pasteMarkdownTextarea" 
+        dir="auto"
+        rows="8" 
+        class="w-full p-3 rounded-xl bg-[#0d0d14] border border-[#262638] text-white text-xs sm:text-sm font-mono placeholder-zinc-600 focus:outline-none focus:border-purple-500 custom-scroll"
+        placeholder="# Task Triage Flow&#10;&#10;### 🔴 Urgent&#10;- [ ] Fix critical bug&#10;&#10;### 🟢 Normal&#10;- [ ] Review pull request&#10;&#10;### 🟡 Later&#10;- [ ] Update documentation&#10;&#10;### 📋 Backlog&#10;- [ ] Plan next sprint"
+      ></textarea>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800">
+        <button onclick="closePasteMarkdownModal()" class="px-3.5 py-1.5 text-xs text-zinc-400 hover:text-white rounded-lg">Cancel</button>
+        <button onclick="handlePasteMarkdownSubmit()" class="px-4 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition flex items-center gap-1.5 active:scale-95">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          <span>Import Tasks</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Add Modal -->
+  <div id="bulkModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-[#14141e] border border-zinc-700 rounded-2xl max-w-md w-full p-5 shadow-2xl animate-in">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <span>📋 Bulk Paste Mini-Tasks</span>
+        </h3>
+        <button onclick="closeBulkAddModal()" class="text-zinc-400 hover:text-white text-lg leading-none">&times;</button>
+      </div>
+      <p class="text-xs text-zinc-400 mb-3">
+        Paste a list of items (one task per line). They will all be added straight into your Backlog.
+      </p>
+      <textarea 
+        id="bulkInput" 
+        dir="auto"
+        rows="6" 
+        class="w-full p-3 rounded-xl bg-[#0d0d14] border border-[#262638] text-white text-xs sm:text-sm placeholder-zinc-600 focus:outline-none focus:border-purple-500"
+        placeholder="Design home mockup&#10;Write release notes&#10;Fix drag and drop glitch&#10;Send weekly email"
+      ></textarea>
+      <div class="flex items-center justify-end gap-2 mt-4">
+        <button onclick="closeBulkAddModal()" class="px-3.5 py-1.5 text-xs text-zinc-400 hover:text-white rounded-lg">Cancel</button>
+        <button onclick="handleBulkAddSubmit()" class="px-4 py-1.5 text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition">Add All Tasks</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Toast Notification -->
+  <div id="toast" class="bg-zinc-900 border border-zinc-750 text-white text-xs px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2.5">
+    <span id="toastIcon">✓</span>
+    <span id="toastMsg">Action completed</span>
+    <button id="toastUndoBtn" onclick="handleUndoDelete()" class="hidden text-purple-400 hover:text-purple-300 font-bold ml-1.5 underline">Undo</button>
+  </div>
+
+  <!-- Client-side Logic Script -->
+  <script is:inline>
+    // Storage Key
+    const STORAGE_KEY = 'stp_triage_board_state_v1';
+
+    // State Model
+    let boardState = {
+      backlog: [],
+      red: [],
+      green: [],
+      yellow: [],
+      titles: {
+        red: 'Urgent & High Focus',
+        green: 'In Flow & Normal',
+        yellow: 'Later & Low Priority'
+      }
+    };
+
+    // Active drag tracking
+    let draggedTaskId = null;
+    let draggedFromZone = null;
+
+    // Context menu active item
+    let ctxActiveTaskId = null;
+    let ctxActiveZone = null;
+
+    // Deleted task backup for undo
+    let lastDeletedTask = null;
+    let lastDeletedZone = null;
+    let toastTimeout = null;
+
+    // Default starter tasks for first-time visitors
+    const DEFAULT_DATA = {
+      backlog: [
+        { id: 't-1', text: 'Update dependencies to latest versions', createdAt: Date.now() - 50000 },
+        { id: 't-2', text: 'Write changelog for v2 release', createdAt: Date.now() - 40000 },
+        { id: 't-3', text: 'Refactor mobile navigation drawer', createdAt: Date.now() - 30000 }
+      ],
+      red: [
+        { id: 't-4', text: 'Fix critical session timeout bug', createdAt: Date.now() - 20000 }
+      ],
+      green: [
+        { id: 't-5', text: 'Implement visual task drag and drop', createdAt: Date.now() - 10000 }
+      ],
+      yellow: [
+        { id: 't-6', text: 'Explore dark theme color variants', createdAt: Date.now() - 5000 }
+      ],
+      titles: {
+        red: 'Urgent & High Focus',
+        green: 'In Flow & Normal',
+        yellow: 'Later & Low Priority'
+      }
+    };
+
+    // Load state from localStorage
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          boardState = {
+            backlog: parsed.backlog || [],
+            red: parsed.red || [],
+            green: parsed.green || [],
+            yellow: parsed.yellow || [],
+            titles: {
+              red: parsed.titles?.red || 'Urgent & High Focus',
+              green: parsed.titles?.green || 'In Flow & Normal',
+              yellow: parsed.titles?.yellow || 'Later & Low Priority'
+            }
+          };
+        } else {
+          boardState = JSON.parse(JSON.stringify(DEFAULT_DATA));
+          saveState();
+        }
+      } catch (err) {
+        console.warn('Failed to parse board state from localStorage:', err);
+        boardState = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      }
+    }
+
+    // Save state to localStorage
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(boardState));
+      } catch (err) {
+        console.warn('Failed to save to localStorage:', err);
+      }
+    }
+
+    // Render all zones
+    function renderBoard() {
+      // Update zone titles
+      document.getElementById('label-red').textContent = boardState.titles.red;
+      document.getElementById('label-green').textContent = boardState.titles.green;
+      document.getElementById('label-yellow').textContent = boardState.titles.yellow;
+
+      // Render each zone
+      renderZone('backlog');
+      renderZone('red');
+      renderZone('green');
+      renderZone('yellow');
+
+      // Update counters
+      document.getElementById('backlogCount').textContent = boardState.backlog.length;
+      document.getElementById('count-red').textContent = `${boardState.red.length} task${boardState.red.length === 1 ? '' : 's'}`;
+      document.getElementById('count-green').textContent = `${boardState.green.length} task${boardState.green.length === 1 ? '' : 's'}`;
+      document.getElementById('count-yellow').textContent = `${boardState.yellow.length} task${boardState.yellow.length === 1 ? '' : 's'}`;
+
+      // Update mobile segmented counters
+      const mobileBacklogCount = document.getElementById('mobileTabBacklogCount');
+      if (mobileBacklogCount) mobileBacklogCount.textContent = boardState.backlog.length;
+
+      const mobileZonesCount = document.getElementById('mobileTabZonesCount');
+      if (mobileZonesCount) {
+        const totalInZones = boardState.red.length + boardState.green.length + boardState.yellow.length;
+        mobileZonesCount.textContent = totalInZones;
+      }
+
+      // Adjust dynamic flex growth based on items count
+      adjustZoneFlex();
+    }
+
+    // Render individual zone
+    function renderZone(zoneKey) {
+      const container = document.getElementById(`zone-${zoneKey}`);
+      if (!container) return;
+
+      const tasks = boardState[zoneKey] || [];
+      container.innerHTML = '';
+
+      if (tasks.length === 0) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'w-full flex items-center justify-center p-2.5 rounded-lg border border-dashed border-zinc-800/80 text-zinc-500 text-xs text-center select-none min-h-[42px]';
+        
+        if (zoneKey === 'backlog') {
+          emptyState.innerHTML = '<span>No backlog items. Type above to add!</span>';
+        } else if (zoneKey === 'red') {
+          emptyState.innerHTML = '<span class="text-rose-400/60">Drop urgent tasks here (🔴 Top)</span>';
+        } else if (zoneKey === 'green') {
+          emptyState.innerHTML = '<span class="text-emerald-400/60">Drop in-flow tasks here (🟢 Middle)</span>';
+        } else if (zoneKey === 'yellow') {
+          emptyState.innerHTML = '<span class="text-amber-400/60">Drop later tasks here (🟡 Bottom)</span>';
+        }
+        container.appendChild(emptyState);
+        return;
+      }
+
+      tasks.forEach((task) => {
+        const card = createTaskElement(task, zoneKey);
+        container.appendChild(card);
+      });
+    }
+
+    // Create task DOM element with event listeners
+    function createTaskElement(task, zoneKey) {
+      const card = document.createElement('div');
+      card.className = 'task-card rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 flex items-center gap-2 text-xs sm:text-sm group flex-shrink-0';
+      card.setAttribute('draggable', 'true');
+      card.setAttribute('data-id', task.id);
+      card.setAttribute('data-zone', zoneKey);
+
+      // Accent color indicator by zone
+      let accentDot = '';
+      if (zoneKey === 'red') accentDot = '<span class="w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0 shadow-sm shadow-rose-500/50"></span>';
+      else if (zoneKey === 'green') accentDot = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0 shadow-sm shadow-emerald-500/50"></span>';
+      else if (zoneKey === 'yellow') accentDot = '<span class="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0 shadow-sm shadow-amber-500/50"></span>';
+      else accentDot = '<span class="w-1.5 h-1.5 rounded-full bg-purple-400/80 flex-shrink-0 shadow-sm shadow-purple-500/30"></span>';
+
+      card.innerHTML = `
+        <span class="text-zinc-600 hover:text-zinc-400 cursor-grab flex-shrink-0 select-none text-xs leading-none" title="Drag to move">⠿</span>
+        ${accentDot}
+        <span class="task-text text-zinc-200 select-text leading-tight font-medium break-words max-w-[240px] sm:max-w-[340px]" dir="auto" title="Double click to edit">${escapeHtml(task.text)}</span>
+        <button class="menu-btn p-1 rounded-md hover:bg-zinc-800 text-zinc-400 hover:text-white transition-opacity opacity-60 sm:opacity-0 group-hover:opacity-100 flex-shrink-0" title="Options">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+          </svg>
+        </button>
+      `;
+
+      // Drag event handlers
+      card.addEventListener('dragstart', (e) => {
+        draggedTaskId = task.id;
+        draggedFromZone = zoneKey;
+        card.classList.add('is-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', task.id);
+      });
+
+      card.addEventListener('dragend', () => {
+        card.classList.remove('is-dragging');
+        clearDropHighlights();
+      });
+
+      // Double-click to inline edit (As requested)
+      card.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        startInlineTaskEdit(card, task, zoneKey);
+      });
+
+      // Right-click context menu (As requested)
+      card.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openContextMenu(e.clientX, e.clientY, task, zoneKey);
+      });
+
+      // Single menu button click (opens options menu)
+      const menuBtn = card.querySelector('.menu-btn');
+      if (menuBtn) {
+        menuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rect = menuBtn.getBoundingClientRect();
+          openContextMenu(rect.left, rect.bottom + 5, task, zoneKey);
+        });
+      }
+
+      return card;
+    }
+
+    // Dynamic Zone Flex sizing
+    // Each of the 3 right-side zones grows proportionally according to its task count
+    function adjustZoneFlex() {
+      const redCount = boardState.red.length;
+      const greenCount = boardState.green.length;
+      const yellowCount = boardState.yellow.length;
+
+      const boxRed = document.getElementById('box-red');
+      const boxGreen = document.getElementById('box-green');
+      const boxYellow = document.getElementById('box-yellow');
+
+      if (!boxRed || !boxGreen || !boxYellow) return;
+
+      // Estimate row count (assuming ~3 chips per row in Pinterest wrap layout)
+      const rowsRed = Math.max(1, Math.ceil(redCount / 3));
+      const rowsGreen = Math.max(1, Math.ceil(greenCount / 3));
+      const rowsYellow = Math.max(1, Math.ceil(yellowCount / 3));
+
+      // Calculate dynamic flex weights: base 1 + row growth
+      const flexRed = 1 + (rowsRed - 1) * 0.45;
+      const flexGreen = 1 + (rowsGreen - 1) * 0.45;
+      const flexYellow = 1 + (rowsYellow - 1) * 0.45;
+
+      boxRed.style.flex = `${flexRed} 1 0%`;
+      boxGreen.style.flex = `${flexGreen} 1 0%`;
+      boxYellow.style.flex = `${flexYellow} 1 0%`;
+    }
+
+    // Attach drop handlers to zones
+    function setupDropZones() {
+      const zones = ['backlog', 'red', 'green', 'yellow'];
+
+      zones.forEach((zoneKey) => {
+        const zoneElem = document.getElementById(`zone-${zoneKey}`);
+        if (!zoneElem) return;
+
+        zoneElem.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          zoneElem.classList.add('drag-over');
+        });
+
+        zoneElem.addEventListener('dragleave', (e) => {
+          // Check if relatedTarget is outside the zone
+          if (!zoneElem.contains(e.relatedTarget)) {
+            zoneElem.classList.remove('drag-over');
+          }
+        });
+
+        zoneElem.addEventListener('drop', (e) => {
+          e.preventDefault();
+          zoneElem.classList.remove('drag-over');
+
+          const taskId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+          if (!taskId || !draggedFromZone) return;
+
+          const targetCard = e.target.closest('.task-card');
+          const targetId = targetCard ? targetCard.getAttribute('data-id') : null;
+
+          moveTask(taskId, draggedFromZone, zoneKey, targetId);
+        });
+      });
+    }
+
+    function clearDropHighlights() {
+      document.querySelectorAll('.zone-box, .zone-backlog').forEach((el) => {
+        el.classList.remove('drag-over');
+      });
+    }
+
+    // Move task between zones or reorder
+    function moveTask(taskId, fromZone, toZone, targetId = null) {
+      const fromList = boardState[fromZone];
+      const taskIndex = fromList.findIndex((t) => t.id === taskId);
+      if (taskIndex === -1) return;
+
+      const [task] = fromList.splice(taskIndex, 1);
+      const toList = boardState[toZone];
+
+      if (targetId && targetId !== taskId) {
+        const targetIndex = toList.findIndex((t) => t.id === targetId);
+        if (targetIndex !== -1) {
+          toList.splice(targetIndex, 0, task);
+        } else {
+          toList.push(task);
+        }
+      } else {
+        toList.push(task);
+      }
+
+      saveState();
+      renderBoard();
+      showToast(`Moved to ${formatZoneName(toZone)}`, '✓');
+    }
+
+    function formatZoneName(key) {
+      if (key === 'red') return '🔴 Red';
+      if (key === 'green') return '🟢 Green';
+      if (key === 'yellow') return '🟡 Yellow';
+      return '📋 Backlog';
+    }
+
+    // Add new task
+    function handleAddTask(e) {
+      e.preventDefault();
+      const input = document.getElementById('taskInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const newTask = {
+        id: 't-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+        text: text,
+        createdAt: Date.now()
+      };
+
+      boardState.backlog.unshift(newTask);
+      saveState();
+      renderBoard();
+
+      input.value = '';
+      input.focus();
+      showToast('Task added to backlog', '✓');
+    }
+
+    // Delete task with Undo option
+    function deleteTask(taskId, zoneKey) {
+      const list = boardState[zoneKey];
+      const index = list.findIndex((t) => t.id === taskId);
+      if (index === -1) return;
+
+      lastDeletedTask = list[index];
+      lastDeletedZone = zoneKey;
+
+      list.splice(index, 1);
+      saveState();
+      renderBoard();
+
+      showToast('Task deleted', '🗑️', true);
+    }
+
+    // Undo delete
+    function handleUndoDelete() {
+      if (!lastDeletedTask || !lastDeletedZone) return;
+      boardState[lastDeletedZone].push(lastDeletedTask);
+      saveState();
+      renderBoard();
+
+      lastDeletedTask = null;
+      lastDeletedZone = null;
+      showToast('Task restored', '↩');
+    }
+
+    // Inline edit task text (Triggered by double click or edit button)
+    function startInlineTaskEdit(card, task, zoneKey) {
+      const textContainer = card.querySelector('.task-text');
+      if (!textContainer) return;
+
+      const currentText = task.text;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = currentText;
+      input.setAttribute('dir', 'auto');
+      input.className = 'inline-edit-input w-full py-1 px-2 rounded-lg bg-[#0d0d14] border border-purple-500 text-white text-xs sm:text-sm focus:outline-none';
+
+      textContainer.replaceWith(input);
+      input.focus();
+      input.select();
+
+      let finished = false;
+      const finishEdit = (save) => {
+        if (finished) return;
+        finished = true;
+
+        if (save) {
+          const val = input.value.trim();
+          if (val && val !== currentText) {
+            task.text = val;
+            saveState();
+            showToast('Task updated', '✓');
+          }
+        }
+        renderBoard();
+      };
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') finishEdit(true);
+        if (e.key === 'Escape') finishEdit(false);
+      });
+
+      input.addEventListener('blur', () => {
+        finishEdit(true);
+      });
+    }
+
+    // Inline edit zone title
+    function inlineEditZoneTitle(zoneKey) {
+      const label = document.getElementById(`label-${zoneKey}`);
+      if (!label) return;
+
+      const current = boardState.titles[zoneKey];
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = current;
+      input.setAttribute('dir', 'auto');
+      input.className = 'inline-edit-input py-0.5 px-2 rounded bg-zinc-900 border border-purple-500 text-white text-xs font-bold focus:outline-none';
+
+      label.replaceWith(input);
+      input.focus();
+      input.select();
+
+      const commit = () => {
+        const val = input.value.trim();
+        if (val) {
+          boardState.titles[zoneKey] = val;
+          saveState();
+        }
+        renderBoard();
+      };
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') commit();
+        if (e.key === 'Escape') renderBoard();
+      });
+      input.addEventListener('blur', commit);
+    }
+
+    // Right-Click Context Menu Logic
+    function openContextMenu(x, y, task, zoneKey) {
+      ctxActiveTaskId = task.id;
+      ctxActiveZone = zoneKey;
+
+      const menu = document.getElementById('contextMenu');
+      const backdrop = document.getElementById('contextMenuBackdrop');
+      const preview = document.getElementById('ctxTaskPreview');
+      preview.textContent = `"${task.text.substring(0, 26)}${task.text.length > 26 ? '…' : ''}"`;
+
+      menu.style.display = 'block';
+
+      if (window.innerWidth <= 640) {
+        // Mobile bottom sheet mode
+        if (backdrop) backdrop.classList.remove('hidden');
+        menu.style.left = '0px';
+        menu.style.top = 'auto';
+        menu.style.bottom = '0px';
+      } else {
+        // Desktop floating mode
+        if (backdrop) backdrop.classList.add('hidden');
+        const menuWidth = 210;
+        const menuHeight = 220;
+
+        let posX = x;
+        let posY = y;
+        if (posX + menuWidth > window.innerWidth) posX = window.innerWidth - menuWidth - 10;
+        if (posY + menuHeight > window.innerHeight) posY = window.innerHeight - menuHeight - 10;
+
+        menu.style.left = `${Math.max(10, posX)}px`;
+        menu.style.top = `${Math.max(10, posY)}px`;
+        menu.style.bottom = 'auto';
+      }
+    }
+
+    function closeContextMenu() {
+      const menu = document.getElementById('contextMenu');
+      if (menu) menu.style.display = 'none';
+      const backdrop = document.getElementById('contextMenuBackdrop');
+      if (backdrop) backdrop.classList.add('hidden');
+      ctxActiveTaskId = null;
+      ctxActiveZone = null;
+    }
+
+    window.addEventListener('click', (e) => {
+      if (!e.target.closest('#contextMenu') && !e.target.closest('.menu-btn')) {
+        closeContextMenu();
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeContextMenu();
+        closeBulkAddModal();
+        closePasteMarkdownModal();
+      }
+    });
+
+    function handleCtxEdit() {
+      if (!ctxActiveTaskId || !ctxActiveZone) return;
+      const card = document.querySelector(`[data-id="${ctxActiveTaskId}"]`);
+      const task = boardState[ctxActiveZone].find((t) => t.id === ctxActiveTaskId);
+      closeContextMenu();
+      if (card && task) {
+        startInlineTaskEdit(card, task, ctxActiveZone);
+      }
+    }
+
+    function handleCtxMove(targetZone) {
+      if (!ctxActiveTaskId || !ctxActiveZone) return;
+      const id = ctxActiveTaskId;
+      const from = ctxActiveZone;
+      closeContextMenu();
+      if (from !== targetZone) {
+        moveTask(id, from, targetZone);
+      }
+    }
+
+    function handleCtxDelete() {
+      if (!ctxActiveTaskId || !ctxActiveZone) return;
+      const id = ctxActiveTaskId;
+      const from = ctxActiveZone;
+      closeContextMenu();
+      deleteTask(id, from);
+    }
+
+    // Bulk Add Modal
+    function openBulkAddModal() {
+      const modal = document.getElementById('bulkModal');
+      const input = document.getElementById('bulkInput');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      input.value = '';
+      input.focus();
+    }
+
+    function closeBulkAddModal() {
+      const modal = document.getElementById('bulkModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function handleBulkAddSubmit() {
+      const input = document.getElementById('bulkInput');
+      const lines = input.value.split('\n').map((l) => l.trim()).filter(Boolean);
+      if (lines.length === 0) {
+        closeBulkAddModal();
+        return;
+      }
+
+      lines.reverse().forEach((line) => {
+        boardState.backlog.unshift({
+          id: 't-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+          text: line,
+          createdAt: Date.now()
+        });
+      });
+
+      saveState();
+      renderBoard();
+      closeBulkAddModal();
+      showToast(`Added ${lines.length} tasks to backlog`, '✓');
+    }
+
+    // Paste Markdown Modal Logic
+    function openPasteMarkdownModal() {
+      const modal = document.getElementById('pasteMarkdownModal');
+      const textarea = document.getElementById('pasteMarkdownTextarea');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      textarea.value = '';
+      textarea.focus();
+    }
+
+    function closePasteMarkdownModal() {
+      const modal = document.getElementById('pasteMarkdownModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function handleClipboardPasteClick() {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          document.getElementById('pasteMarkdownTextarea').value = text;
+          showToast('Pasted from clipboard!', '📋');
+        } else {
+          showToast('Clipboard is empty', 'ℹ️');
+        }
+      } catch (err) {
+        showToast('Please paste directly using Ctrl+V / Cmd+V', 'ℹ️');
+      }
+    }
+
+    function handlePasteMarkdownSubmit() {
+      const textarea = document.getElementById('pasteMarkdownTextarea');
+      const text = textarea.value.trim();
+      if (!text) {
+        closePasteMarkdownModal();
+        return;
+      }
+
+      const modeRadio = document.querySelector('input[name="importMode"]:checked');
+      const mode = modeRadio ? modeRadio.value : 'merge';
+
+      importMarkdownText(text, mode);
+      closePasteMarkdownModal();
+    }
+
+    // Robust Markdown Parser & Importer
+    function importMarkdownText(markdownText, mode = 'merge') {
+      const lines = markdownText.split('\n');
+      let currentZone = 'backlog';
+      const imported = {
+        backlog: [],
+        red: [],
+        green: [],
+        yellow: []
+      };
+
+      for (let rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) continue;
+
+        const lower = line.toLowerCase();
+        // Section detection
+        if (line.includes('🔴') || (line.startsWith('#') && (lower.includes('urgent') || lower.includes('high') || lower.includes('red')))) {
+          currentZone = 'red';
+          continue;
+        } else if (line.includes('🟢') || (line.startsWith('#') && (lower.includes('flow') || lower.includes('normal') || lower.includes('green')))) {
+          currentZone = 'green';
+          continue;
+        } else if (line.includes('🟡') || (line.startsWith('#') && (lower.includes('later') || lower.includes('low') || lower.includes('yellow')))) {
+          currentZone = 'yellow';
+          continue;
+        } else if (line.includes('📋') || (line.startsWith('#') && lower.includes('backlog'))) {
+          currentZone = 'backlog';
+          continue;
+        }
+
+        // Skip headers or placeholder tokens
+        if (line.startsWith('#') || line === '*(None)*' || line.startsWith('---')) {
+          continue;
+        }
+
+        // Clean checklist / bullet prefixes
+        let cleanText = line
+          .replace(/^[-*+]\s*(\[[ xX]\])?\s*/, '')
+          .replace(/^\d+[\.)]\s*/, '')
+          .trim();
+
+        if (cleanText) {
+          imported[currentZone].push({
+            id: 't-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+            text: cleanText,
+            createdAt: Date.now()
+          });
+        }
+      }
+
+      const total = imported.backlog.length + imported.red.length + imported.green.length + imported.yellow.length;
+      if (total === 0) {
+        showToast('No tasks found in pasted markdown', '⚠️');
+        return;
+      }
+
+      if (mode === 'replace') {
+        boardState.backlog = imported.backlog;
+        boardState.red = imported.red;
+        boardState.green = imported.green;
+        boardState.yellow = imported.yellow;
+      } else {
+        boardState.backlog = [...imported.backlog, ...boardState.backlog];
+        boardState.red = [...imported.red, ...boardState.red];
+        boardState.green = [...imported.green, ...boardState.green];
+        boardState.yellow = [...imported.yellow, ...boardState.yellow];
+      }
+
+      saveState();
+      renderBoard();
+      showToast(`Imported ${total} tasks from Markdown!`, '✓');
+    }
+
+    // Mobile Segmented View Tab Switcher
+    let currentMobileTab = 'backlog';
+
+    function switchMobileTab(tab) {
+      currentMobileTab = tab;
+      const colBacklog = document.getElementById('colBacklog');
+      const colZones = document.getElementById('colZones');
+      const btnBacklog = document.getElementById('mobileTabBacklog');
+      const btnZones = document.getElementById('mobileTabZones');
+
+      if (!colBacklog || !colZones) return;
+
+      if (tab === 'backlog') {
+        colBacklog.classList.remove('hidden');
+        colZones.classList.add('hidden');
+        colZones.classList.remove('flex');
+
+        if (btnBacklog) btnBacklog.className = 'flex-1 py-2 text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5 bg-purple-600 text-white shadow-sm';
+        if (btnZones) btnZones.className = 'flex-1 py-2 text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5 text-zinc-400 hover:text-white';
+      } else {
+        colBacklog.classList.add('hidden');
+        colZones.classList.remove('hidden');
+        colZones.classList.add('flex');
+
+        if (btnBacklog) btnBacklog.className = 'flex-1 py-2 text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5 text-zinc-400 hover:text-white';
+        if (btnZones) btnZones.className = 'flex-1 py-2 text-xs font-semibold rounded-lg transition flex items-center justify-center gap-1.5 bg-purple-600 text-white shadow-sm';
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 1024) {
+        const colBacklog = document.getElementById('colBacklog');
+        const colZones = document.getElementById('colZones');
+        if (colBacklog) colBacklog.classList.remove('hidden');
+        if (colZones) {
+          colZones.classList.remove('hidden');
+          colZones.classList.add('flex');
+        }
+      } else {
+        switchMobileTab(currentMobileTab);
+      }
+    });
+
+    // Copy entire board as formatted Markdown
+    function copyBoardAsMarkdown() {
+      let md = `# Task Triage Flow\n\n`;
+
+      md += `### 🔴 ${boardState.titles.red} (${boardState.red.length})\n`;
+      if (boardState.red.length === 0) md += `*(None)*\n`;
+      else boardState.red.forEach((t) => { md += `- [ ] ${t.text}\n`; });
+      md += `\n`;
+
+      md += `### 🟢 ${boardState.titles.green} (${boardState.green.length})\n`;
+      if (boardState.green.length === 0) md += `*(None)*\n`;
+      else boardState.green.forEach((t) => { md += `- [ ] ${t.text}\n`; });
+      md += `\n`;
+
+      md += `### 🟡 ${boardState.titles.yellow} (${boardState.yellow.length})\n`;
+      if (boardState.yellow.length === 0) md += `*(None)*\n`;
+      else boardState.yellow.forEach((t) => { md += `- [ ] ${t.text}\n`; });
+      md += `\n`;
+
+      md += `### 📋 Backlog (${boardState.backlog.length})\n`;
+      if (boardState.backlog.length === 0) md += `*(None)*\n`;
+      else boardState.backlog.forEach((t) => { md += `- [ ] ${t.text}\n`; });
+
+      navigator.clipboard.writeText(md).then(() => {
+        showToast('Board copied as Markdown!', '📋');
+      }).catch(() => {
+        showToast('Failed to copy to clipboard', '⚠️');
+      });
+    }
+
+    // Confirm clear board
+    function confirmClearBoard() {
+      if (confirm('Are you sure you want to clear all tasks from the entire board?')) {
+        boardState.backlog = [];
+        boardState.red = [];
+        boardState.green = [];
+        boardState.yellow = [];
+        saveState();
+        renderBoard();
+        showToast('Board cleared', '🧹');
+      }
+    }
+
+    // Toast Notifications
+    function showToast(message, icon = '✓', showUndo = false) {
+      const toast = document.getElementById('toast');
+      const msg = document.getElementById('toastMsg');
+      const icn = document.getElementById('toastIcon');
+      const undo = document.getElementById('toastUndoBtn');
+
+      if (!toast) return;
+
+      msg.textContent = message;
+      icn.textContent = icon;
+      if (showUndo) undo.classList.remove('hidden');
+      else undo.classList.add('hidden');
+
+      toast.classList.add('show');
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 4000);
+    }
+
+    // Escape HTML helper
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // Standalone PWA install handler
+    let toolInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      toolInstallPrompt = e;
+      const btn = document.getElementById('pwaInstallToolBtn');
+      if (btn) btn.style.display = 'inline-flex';
+    });
+
+    function triggerToolPwaInstall() {
+      if (toolInstallPrompt) {
+        toolInstallPrompt.prompt();
+        toolInstallPrompt.userChoice.then(() => {
+          toolInstallPrompt = null;
+          const btn = document.getElementById('pwaInstallToolBtn');
+          if (btn) btn.style.display = 'none';
+        });
+      }
+    }
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch((err) => {
+          console.warn('[SW] Registration failed:', err);
+        });
+      });
+    }
+
+    // Initialize
+    loadState();
+    renderBoard();
+    setupDropZones();
+  </script>
+</body>
+</html>

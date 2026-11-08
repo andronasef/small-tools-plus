@@ -47,6 +47,7 @@ small-tools-plus/
 │           ├── notion-copy-helper.astro
 │           ├── sleep-calculator.astro
 │           ├── store-localizer.astro
+│           ├── task-organizer.astro
 │           └── tithe-forever.astro
 └── dist/                         # Compiled static output deployed to GitHub Pages
 ```
@@ -85,6 +86,7 @@ small-tools-plus/
   3. DevFit Workout Guide (`daily-workout`)
   4. Tithe Forever (`tithe-forever`)
   5. Sleep Cycle Calculator (`sleep-calculator`)
+  6. Task Triage Organizer (`task-organizer`)
 
 ---
 
